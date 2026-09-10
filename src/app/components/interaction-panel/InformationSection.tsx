@@ -701,20 +701,8 @@ export function InformationSection({
                       098765
                     </span>
 
-                    {/* Botões de ação - sempre visíveis em cinza */}
+                    {/* Botões de ação - depois do número: copiar, depois abrir */}
                     <div className="flex items-center gap-1">
-                      {/* Botão abrir caso */}
-                      <button
-                        onClick={() => {
-                          navigate("/casos");
-                          console.log("Abrir caso 098765");
-                        }}
-                        className="p-1.5 rounded-md hover:bg-gray-200 transition-colors"
-                        title="Abrir caso"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
-                      </button>
-
                       {/* Botão copiar */}
                       <button
                         onClick={async () => {
@@ -724,6 +712,17 @@ export function InformationSection({
                         title="Copiar"
                       >
                         <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                      </button>
+
+                      {/* Botão abrir caso */}
+                      <button
+                        onClick={() => {
+                          navigate("/management/cases?caso=098765");
+                        }}
+                        className="p-1.5 rounded-md hover:bg-gray-200 transition-colors"
+                        title="Abrir caso"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
                       </button>
                     </div>
                   </div>

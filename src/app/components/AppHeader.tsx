@@ -87,7 +87,7 @@ function WizzIcon({ className }: { className?: string }) {
   );
 }
 
-function HeaderLogo() {
+function HeaderLogo({ showBeta = true }: { showBeta?: boolean }) {
   return (
     <div className="flex items-center gap-0.5">
       <div className="h-8 overflow-clip relative shrink-0 w-26">
@@ -163,12 +163,14 @@ function HeaderLogo() {
           </svg>
         </div>
       </div>
-      <span
-        className="text-primary mb-0.5"
-        style={{ fontFamily: "Manrope", fontSize: "20px" }}
-      >
-        beta
-      </span>
+      {showBeta && (
+        <span
+          className="text-primary mb-0.5"
+          style={{ fontFamily: "Manrope", fontSize: "20px" }}
+        >
+          beta
+        </span>
+      )}
     </div>
   );
 }
@@ -192,16 +194,17 @@ function NavItem({
     <div
       className={`box-border content-stretch flex gap-1 items-center justify-center px-4 py-4 relative shrink-0 cursor-pointer transition-colors duration-200 h-16 border-b-2 ${
         isActive
-          ? "border-brand-primary"
+          ? "border-primary"
           : "border-transparent hover:bg-muted/50"
       }`}
     >
       <Text
         as="span"
         variant="sm"
+        weight={isActive ? "bold" : "normal"}
         className={`leading-tight relative shrink-0 text-nowrap whitespace-pre ${
           isActive
-            ? "text-brand-primary"
+            ? "text-primary"
             : "text-muted-foreground hover:text-foreground"
         }`}
       >
@@ -211,7 +214,7 @@ function NavItem({
         <ChevronDown
           className={`size-4.5 ${
             isActive
-              ? "stroke-brand-primary"
+              ? "stroke-primary"
               : "stroke-muted-foreground"
           }`}
           strokeWidth="2"
@@ -399,6 +402,12 @@ export default function AppHeader() {
   };
 
   const activeItem = getActiveItem(location.pathname);
+  // "beta" só nas telas do produto principal (AGW) — /management/cases,
+  // apesar de contar como "gerenciamento" pra destacar o menu, não é AGW.
+  const isAgwScreen =
+    location.pathname.includes("/atendimentos") ||
+    location.pathname === "/" ||
+    location.pathname === "/gerenciamento";
   const isAtendimento = activeItem === "atendimento";
 
   // Iniciar chamada automaticamente ao entrar em Atendimentos (Simulação)
@@ -499,7 +508,7 @@ export default function AppHeader() {
           <div className="flex items-center gap-1.5">
             {/* Logo */}
             <Link to="/atendimentos" className="flex-shrink-0">
-              <HeaderLogo />
+              <HeaderLogo showBeta={isAgwScreen} />
             </Link>
 
             {/* Divisor */}

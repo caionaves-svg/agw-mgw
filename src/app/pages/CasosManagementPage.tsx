@@ -36,8 +36,6 @@ import {
   ArrowDown,
   MessageCircle,
   AlignJustify,
-  PanelLeftClose,
-  PanelLeftOpen,
 } from "lucide-react";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -393,26 +391,15 @@ export default function CasosManagementPage() {
   );
 
   return (
-    <div className="h-full flex flex-row bg-background overflow-hidden">
+    <div className="h-full flex flex-row bg-background overflow-hidden relative">
       {/* ── Left Sidebar ────────────────────────────────────────────────── */}
       <div
-        className={`flex-shrink-0 border-r border-border bg-background flex flex-col transition-all duration-200 overflow-hidden ${
-          sidebarOpen ? "w-44" : "w-0"
+        className={`flex-shrink-0 bg-background flex flex-col transition-all duration-200 overflow-hidden ${
+          sidebarOpen ? "w-44 border-r border-border" : "w-0"
         }`}
       >
-        {/* Collapse button — colado no topo, acima do divisor da nav */}
-        <div className="flex items-center justify-end px-2 py-1.5 border-b border-border">
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            title="Recolher menu"
-          >
-            <PanelLeftClose className="w-4 h-4" />
-          </button>
-        </div>
-
         {/* Nav sections */}
-        <nav className="flex-1 overflow-y-auto py-1">
+        <nav className="flex-1 overflow-y-auto pt-4 pb-1">
           {NAV_SECTIONS.map((section) => {
             const collapsed = collapsedSections.has(section.id);
             return (
@@ -460,18 +447,24 @@ export default function CasosManagementPage() {
         </nav>
       </div>
 
-      {/* Collapsed sidebar toggle */}
-      {!sidebarOpen && (
-        <div className="flex-shrink-0 border-r border-border bg-background flex flex-col items-center pt-3">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            title="Expandir menu"
-          >
-            <PanelLeftOpen className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+      {/* Botão flutuante de recolher/expandir — fica sobre a linha divisória
+          entre a sidebar e o conteúdo principal */}
+      <button
+        onClick={() => setSidebarOpen((v) => !v)}
+        className="absolute top-4 z-20 flex items-center justify-center w-6 h-6 rounded-full border border-border bg-background shadow-sm hover:bg-muted text-muted-foreground hover:text-foreground transition-[left] duration-200"
+        style={
+          sidebarOpen
+            ? { left: "11rem", transform: "translateX(-50%)" }
+            : { left: "0.5rem" }
+        }
+        title={sidebarOpen ? "Recolher menu" : "Expandir menu"}
+      >
+        {sidebarOpen ? (
+          <ChevronLeft className="w-3.5 h-3.5" />
+        ) : (
+          <ChevronRight className="w-3.5 h-3.5" />
+        )}
+      </button>
 
       {/* ── Main Content ─────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">

@@ -1,0 +1,517 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Font size base - Tamanho Padrão */
+  --font-size-base: 16px;
+  --font-size: var(--font-size-base);
+
+  /* Typography scale - Tamanho Padrão */
+  --text-2xl: 1.5rem; /* 24px */
+  --text-xl: 1.25rem; /* 20px */
+  --text-lg: 1.125rem; /* 18px */
+  --text-base: 1rem; /* 16px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-xs: 0.75rem; /* 12px */
+
+  /* ========================================
+     CORES DE MARCA (Light Mode)
+     ======================================== */
+
+  /* Primary - Azul Ciano (#00BCF2) */
+  --primary: #00bcf2;
+  --primary-foreground: #ffffff;
+
+  /* Secondary - Roxo (#7850CB) */
+  --secondary: #7850cb;
+  --secondary-foreground: #ffffff;
+
+  /* ========================================
+     BACKGROUNDS & SURFACES (Light Mode)
+     ======================================== */
+
+  /* Background principal da página */
+  --background: #ffffff;
+
+  /* Texto principal sobre background */
+  --foreground: #001318;
+
+  /* Cards e painéis elevados */
+  --card: #ffffff;
+  --card-foreground: #001318;
+
+  /* Popovers, dropdowns, tooltips */
+  --popover: #ffffff;
+  --popover-foreground: #001318;
+
+  /* ========================================
+     ELEMENTOS SECUNDÁRIOS (Light Mode)
+     ======================================== */
+
+  /* Backgrounds sutis para elementos não-interativos */
+  --muted: #f0f2f5;
+
+  /* Textos secundários */
+  --muted-foreground: #5f636f;
+
+  /* ========================================
+     ELEMENTOS INTERATIVOS (Light Mode)
+     ======================================== */
+
+  /* Hover states, itens selecionados */
+  --accent: #f5f8fa;
+  --accent-foreground: #0b252f;
+
+  /* ========================================
+     FEEDBACK DO SISTEMA (Light Mode)
+     ======================================== */
+
+  /* Sucesso */
+  --success: #05834e;
+  --success-foreground: #ffffff;
+
+  /* Aviso/Atenção */
+  --warning: #ffb31c;
+  --warning-foreground: #001318;
+
+  /* Erro/Ações Destrutivas */
+  --destructive: #d4183d;
+  --destructive-foreground: #ffffff;
+
+  /* ========================================
+     COMPONENTES (Light Mode)
+     ======================================== */
+
+  /* Bordas padrão */
+  --border: #dddddd;
+
+  /* Borda de inputs */
+  --input: #ebebf0;
+
+  /* Background de inputs */
+  --input-background: #ffffff;
+
+  /* Switch background */
+  --switch-background: #d1d1da;
+
+  /* Outline de foco (acessibilidade) */
+  --ring: #808080;
+
+  /* Tooltip invertido - Fundo escuro com texto branco */
+  --tooltip: #001318;
+  --tooltip-foreground: #ffffff;
+
+  /* ========================================
+     SIDEBAR (Light Mode)
+     ======================================== */
+
+  --sidebar: #fafafa;
+  --sidebar-foreground: #001318;
+
+  /* ========================================
+     MENSAGENS DO CHAT (Light Mode)
+     ======================================== */
+
+  /* Balão do atendente */
+  --message-agent-bg: #e6f7fd; /* primary-50 */
+  --message-agent-border: #99e0f7; /* primary-200 */
+
+  /* ========================================
+     CHARTS (Light Mode)
+     ======================================== */
+
+  --chart-1: #0091ce;
+  --chart-2: #5c3aae;
+  --chart-3: #6d9f10;
+  --chart-4: #db9114;
+  --chart-5: #ba2127;
+  --chart-6: #a83980;
+  --chart-7: #39a898;
+
+  /* ========================================
+     ESCALAS DE COR - PRIMARY (Azul #00BCF2)
+     ======================================== */
+
+  --primary-50: #e6f7fd;
+  --primary-100: #ccf0fb;
+  --primary-200: #99e0f7;
+  --primary-300: #66d1f3;
+  --primary-400: #33c1ef;
+  --primary-500: #00bcf2; /* Cor base */
+  --primary-600: #0097c2;
+  --primary-700: #007191;
+  --primary-800: #004c61;
+  --primary-900: #002630;
+  --primary-950: #001318;
+
+  /* ========================================
+     ESCALAS DE COR - SECONDARY (Roxo #7850CB)
+     ======================================== */
+
+  --secondary-50: #f3eef9;
+  --secondary-100: #e7ddf3;
+  --secondary-200: #cfbbe7;
+  --secondary-300: #b79adb;
+  --secondary-400: #9f78cf;
+  --secondary-500: #7850cb; /* Cor base */
+  --secondary-600: #6040a2;
+  --secondary-700: #48307a;
+  --secondary-800: #302051;
+  --secondary-900: #181029;
+  --secondary-950: #0c0814;
+
+  /* Font weights */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Line heights */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  /* Letter spacing */
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+
+  /* Espaçamentos semânticos da aplicação */
+  --spacing-section: 1.5rem; /* 24px - entre seções */
+  --spacing-component: 1rem; /* 16px - entre componentes */
+  --spacing-element: 0.5rem; /* 8px - entre elementos */
+  --spacing-tight: 0.25rem; /* 4px - espaçamento mínimo */
+
+  /* Radius */
+  --radius: 0.5rem;
+}
+
+/* Font size - Small (Pequeno) */
+:root[data-font-size="small"] {
+  --font-size-base: 14px;
+  --text-2xl: 1.375rem; /* 22px (em vez de 24px) */
+  --text-xl: 1.125rem; /* 18px (em vez de 20px) */
+  --text-lg: 1rem; /* 16px (em vez de 18px) */
+  --text-base: 0.875rem; /* 14px (em vez de 16px) */
+  --text-sm: 0.8125rem; /* 13px (em vez de 14px) */
+  --text-xs: 0.6875rem; /* 11px (em vez de 12px) */
+}
+
+/* Font size - Large (Grande) */
+:root[data-font-size="large"] {
+  --font-size-base: 18px;
+  --text-2xl: 1.625rem; /* 26px (em vez de 24px) */
+  --text-xl: 1.375rem; /* 22px (em vez de 20px) */
+  --text-lg: 1.25rem; /* 20px (em vez de 18px) */
+  --text-base: 1.125rem; /* 18px (em vez de 16px) */
+  --text-sm: 1rem; /* 16px (em vez de 14px) */
+  --text-xs: 0.875rem; /* 14px (em vez de 12px) */
+}
+
+.dark {
+  /* ========================================
+     CORES DE MARCA (Dark Mode - mantém as cores da marca)
+     ======================================== */
+
+  /* Primary - Azul Ciano (#00BCF2) - mantém mesma cor */
+  --primary: #00bcf2;
+  --primary-foreground: #ffffff;
+
+  /* Secondary - Roxo (#7850CB) - mantém mesma cor */
+  --secondary: #7850cb;
+  --secondary-foreground: #ffffff;
+
+  /* ========================================
+     BACKGROUNDS & SURFACES (Dark Mode)
+     ======================================== */
+
+  /* Background principal */
+  --background: #001318;
+
+  /* Texto principal sobre background escuro */
+  --foreground: #ebebeb;
+
+  /* Cards e painéis elevados (mais claro que background) */
+  --card: #001318;
+  --card-foreground: #f5f5f5;
+
+  /* Popovers, dropdowns, tooltips */
+  --popover: #001318;
+  --popover-foreground: #f5f5f5;
+
+  /* ========================================
+     ELEMENTOS SECUNDÁRIOS (Dark Mode)
+     ======================================== */
+
+  /* Backgrounds sutis para elementos não-interativos */
+  --muted: #081d25;
+
+  /* Textos secundários */
+  --muted-foreground: #a1a7ae;
+
+  /* ========================================
+     ELEMENTOS INTERATIVOS (Dark Mode)
+     ======================================== */
+
+  /* Hover states, itens selecionados */
+  --accent: #1a3340;
+  --accent-foreground: #ebebeb;
+
+  /* ========================================
+     FEEDBACK DO SISTEMA (Dark Mode)
+     ======================================== */
+
+  /* Sucesso */
+  --success: #05834e;
+  --success-foreground: #ffffff;
+
+  /* Aviso/Atenção */
+  --warning: #ffb31c;
+  --warning-foreground: #001318;
+
+  /* Erro/Ações Destrutivas */
+  --destructive: #d4183d;
+  --destructive-foreground: #ffffff;
+
+  /* ========================================
+     COMPONENTES (Dark Mode)
+     ======================================== */
+
+  /* Bordas padrão */
+  --border: #3d4d56;
+
+  /* Borda de inputs */
+  --input: #4a5a63;
+
+  /* Background de inputs */
+  --input-background: #1a3340;
+
+  /* Switch background */
+  --switch-background: #5a6a73;
+
+  /* Outline de foco */
+  --ring: #808080;
+
+  /* Tooltip invertido - mantém escuro mesmo no dark mode */
+  --tooltip: #001318;
+  --tooltip-foreground: #ffffff;
+
+  /* ========================================
+     SIDEBAR (Dark Mode)
+     ======================================== */
+
+  --sidebar: #0b252f;
+  --sidebar-foreground: #f5f5f5;
+
+  /* ========================================
+     MENSAGENS DO CHAT (Dark Mode)
+     ======================================== */
+
+  /* Balão do atendente (Dark Mode) */
+  --message-agent-bg: #001630; /* primary-900 */
+  --message-agent-border: #007191; /* primary-700 */
+
+  /* ========================================
+     CHARTS (Dark Mode) - mantém as mesmas cores
+     ======================================== */
+
+  --chart-1: #0091ce;
+  --chart-2: #5c3aae;
+  --chart-3: #6d9f10;
+  --chart-4: #db9114;
+  --chart-5: #ba2127;
+  --chart-6: #a83980;
+  --chart-7: #39a898;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-tooltip: var(--tooltip);
+  --color-tooltip-foreground: var(--tooltip-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+
+  /* Radius scale */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Sidebar tokens */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+
+  --color-message-agent-bg: var(--message-agent-bg);
+  --color-message-agent-border: var(--message-agent-border);
+
+  /* Escalas de cores semânticas - Primary */
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-200: var(--primary-200);
+  --color-primary-300: var(--primary-300);
+  --color-primary-400: var(--primary-400);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
+  --color-primary-800: var(--primary-800);
+  --color-primary-900: var(--primary-900);
+  --color-primary-950: var(--primary-950);
+
+  /* Escalas de cores semânticas - Secondary */
+  --color-secondary-50: var(--secondary-50);
+  --color-secondary-100: var(--secondary-100);
+  --color-secondary-200: var(--secondary-200);
+  --color-secondary-300: var(--secondary-300);
+  --color-secondary-400: var(--secondary-400);
+  --color-secondary-500: var(--secondary-500);
+  --color-secondary-600: var(--secondary-600);
+  --color-secondary-700: var(--secondary-700);
+  --color-secondary-800: var(--secondary-800);
+  --color-secondary-900: var(--secondary-900);
+  --color-secondary-950: var(--secondary-950);
+}
+
+@layer base {
+  /* ========================================
+     TIPOGRAFIA BASE - Manrope para títulos, Inter para corpo
+     ======================================== */
+
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family:
+      "Inter",
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+  }
+
+  /* Títulos usam Manrope */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family:
+      "Manrope",
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    font-weight: 600;
+  }
+
+  /* Parágrafos e corpo de texto usam Inter */
+  p,
+  span,
+  div,
+  input,
+  textarea,
+  select,
+  button {
+    font-family:
+      "Inter",
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+  }
+
+  /* ========================================
+     SCROLLBAR CUSTOMIZADO - Adaptável ao tema
+     ======================================== */
+
+  /* Scrollbar padrão (light mode) */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--muted-foreground);
+    border-radius: 4px;
+    opacity: 0.5;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--foreground);
+    opacity: 0.8;
+  }
+
+  /* Classe para ocultar scrollbar (usado em navegação de canais) */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  /* ========================================
+     FOCUS STYLES - Acessibilidade
+     ======================================== */
+
+  *:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  /* Remove outline padrão mas mantém para teclado */
+  *:focus:not(:focus-visible) {
+    outline: none;
+  }
+}

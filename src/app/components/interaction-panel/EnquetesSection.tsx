@@ -284,7 +284,7 @@ function RespostaNPS({
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 interface Props {
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export function EnquetesSection({ onClose }: Props) {
@@ -310,14 +310,16 @@ export function EnquetesSection({ onClose }: Props) {
             {titulo}
           </span>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="h-6 w-6 p-0 flex-shrink-0 mt-0.5"
-        >
-          <X className="w-4 h-4" />
-        </Button>
+        {onClose && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-6 w-6 p-0 flex-shrink-0 mt-0.5"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-4 space-y-4">

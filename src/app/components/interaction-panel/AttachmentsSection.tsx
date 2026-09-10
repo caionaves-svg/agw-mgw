@@ -110,7 +110,7 @@ function AnexoRow({ anexo }: { anexo: Anexo }) {
 }
 
 interface AttachmentsSectionProps {
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export function AttachmentsSection({
@@ -139,14 +139,16 @@ export function AttachmentsSection({
         <span className="text-base font-medium text-foreground">
           Anexos
         </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="h-6 w-6 p-0"
-        >
-          <X className="w-4 h-4" />
-        </Button>
+        {onClose && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-6 w-6 p-0"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        )}
       </div>
 
       {/* Search + Anexar */}

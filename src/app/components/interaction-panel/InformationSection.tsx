@@ -10,6 +10,7 @@ import {
   Pencil,
   Plus,
   Trash2,
+  Headset,
 } from "lucide-react";
 import { SearchInput } from "../ui/search-input";
 import { Button } from "../ui/button";
@@ -68,34 +69,22 @@ function KpiCard({
 function AssigneeCard({
   name,
   username,
-  status,
 }: {
   name: string;
   username: string;
-  status: string;
 }) {
-  const initials = name
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
   return (
     <div className="bg-background border border-border rounded-lg p-2.5 flex items-center gap-2.5">
-      <div className="w-7 h-7 rounded-full bg-muted border border-border text-muted-foreground flex items-center justify-center flex-shrink-0">
-        <span className="text-xs font-medium">{initials}</span>
+      <div className="w-8 h-8 rounded-full bg-muted border border-border text-muted-foreground flex items-center justify-center flex-shrink-0">
+        <Headset className="w-4 h-4" />
       </div>
       <div className="flex-1 min-w-0">
-        <span className="font-light text-muted-foreground text-sm block leading-tight">
+        <span className="font-light text-muted-foreground text-sm block leading-tight mb-0.5">
           Assinado para
         </span>
         <p className="text-sm text-foreground leading-tight truncate">{name}</p>
         <p className="text-xs text-muted-foreground truncate">{username}</p>
       </div>
-      <span className="flex-shrink-0 text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-400">
-        {status}
-      </span>
     </div>
   );
 }
@@ -128,7 +117,7 @@ interface InformationSectionProps {
       tempoDecorridoMinutos: number;
     }>;
   };
-  onClose: () => void;
+  onClose?: () => void;
   showKpis?: boolean;
 }
 
@@ -491,26 +480,24 @@ export function InformationSection({
             Informações
           </span>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="h-6 w-6 p-0"
-        >
-          <X className="w-4 h-4" />
-        </Button>
+        {onClose && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-6 w-6 p-0"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        )}
       </div>
       {/* Container principal com scroll */}
       <div className="flex-1 px-4 pb-2 overflow-y-auto custom-scrollbar">
 
         {/* ── Assinado para — só no modal ── */}
         {showKpis && (
-          <div className="mb-3 pb-3 border-b border-border">
-            <span className="font-light text-muted-foreground text-sm block mb-1">Assinado para</span>
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="text-sm text-foreground">Bruno Martins</span>
-              <span className="text-xs text-muted-foreground">bruno.martins</span>
-            </div>
+          <div className="mb-3">
+            <AssigneeCard name="Bruno Martins" username="bruno.martins" />
           </div>
         )}
 

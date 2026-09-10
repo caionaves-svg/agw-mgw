@@ -129,7 +129,7 @@ function Field({
 }
 
 interface Props {
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 const uniqueValues = (values: string[]) =>
@@ -232,18 +232,17 @@ export function HistoricoClienteSection({ onClose }: Props) {
           <span className="text-base font-medium text-foreground block leading-tight">
             Histórico do Cliente
           </span>
-          <span className="text-xs text-muted-foreground">
-            Bruno Martins · {MOCK.length} casos
-          </span>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="h-6 w-6 p-0 flex-shrink-0 mt-0.5"
-        >
-          <X className="w-4 h-4" />
-        </Button>
+        {onClose && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-6 w-6 p-0 flex-shrink-0 mt-0.5"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        )}
       </div>
 
       {/* Search + Unificar na mesma linha */}
@@ -292,10 +291,7 @@ export function HistoricoClienteSection({ onClose }: Props) {
           <div key={mesAno}>
             <DateDivider label={mesAno} />
 
-            <div className="relative">
-              {/* Linha vertical — começa e termina no centro do primeiro/último dot */}
-              <div className="absolute left-[9px] top-2.5 bottom-2.5 w-px bg-border" />
-
+            <div>
               <div className="flex flex-col gap-3">
                 {casos.map((caso) => {
                   const st = STATUS_CONFIG[caso.status];
@@ -304,85 +300,67 @@ export function HistoricoClienteSection({ onClose }: Props) {
                   return (
                     <div
                       key={caso.id}
-                      className="relative flex items-start gap-3"
+                      className={`rounded-lg border p-3 transition-colors cursor-pointer ${
+                        isSelected
+                          ? "border-primary/40 bg-primary/5"
+                          : "border-border bg-card hover:bg-accent/40"
+                      }`}
+                      onClick={() => toggleSelect(caso.id)}
                     >
-                      {/* Dot — ancorado na primeira linha do card */}
-                      <div
-                        className={`relative z-10 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center shadow-sm mt-0.5 ${
-                          caso.status === "em-atendimento"
-                            ? "bg-primary"
-                            : caso.status === "finalizado"
-                              ? "bg-success"
-                              : "bg-warning"
-                        }`}
-                      >
-                        <div className="w-2 h-2 rounded-full bg-white/80" />
+                      {/* Linha 1: fila + status + número + ação */}
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <span className="text-[11px] text-muted-foreground font-light">
+                          {caso.fila}
+                        </span>
+                        <Badge
+                          variant={st.badgeVariant}
+                          size="sm"
+                          shape="rounded"
+                        >
+                          {st.label}
+                        </Badge>
+                        <span className="ml-auto text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded font-mono flex-shrink-0">
+                          {caso.numero}
+                        </span>
+                        {caso.status !== "em-atendimento" && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-6 w-6 rounded-md flex-shrink-0"
+                            title="Iniciar"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Play className="w-3 h-3" />
+                          </Button>
+                        )}
                       </div>
 
-                      {/* Card de conteúdo */}
-                      <div
-                        className={`flex-1 rounded-lg border p-3 transition-colors cursor-pointer ${
-                          isSelected
-                            ? "border-primary/40 bg-primary/5"
-                            : "border-border bg-card hover:bg-accent/40"
-                        }`}
-                        onClick={() => toggleSelect(caso.id)}
-                      >
-                        {/* Linha 1: fila + status + número + ação */}
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                          <span className="text-[11px] text-muted-foreground font-light">
-                            {caso.fila}
-                          </span>
-                          <Badge
-                            variant={st.badgeVariant}
-                            size="sm"
-                            shape="rounded"
-                          >
-                            {st.label}
-                          </Badge>
-                          <span className="ml-auto text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded font-mono flex-shrink-0">
-                            {caso.numero}
-                          </span>
-                          {caso.status !== "em-atendimento" && (
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-6 w-6 rounded-md flex-shrink-0"
-                              title="Iniciar"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Play className="w-3 h-3" />
-                            </Button>
-                          )}
-                        </div>
+                      {/* Assunto */}
+                      <p className="text-sm font-medium text-foreground leading-snug mb-2.5">
+                        {caso.assunto}
+                      </p>
 
-                        {/* Assunto */}
-                        <p className="text-sm font-medium text-foreground leading-snug mb-2.5">
-                          {caso.assunto}
-                        </p>
+                      {/* Datas — Criado / Fechado */}
+                      <div className="grid grid-cols-2 gap-x-2 mb-2.5">
+                        <Field
+                          label="Criado"
+                          value={caso.criadoEm}
+                        />
+                        <Field
+                          label="Fechado"
+                          value={caso.fechadoEm ?? "—"}
+                        />
+                      </div>
 
-                        {/* Datas — Criado / Fechado */}
-                        <div className="grid grid-cols-2 gap-x-2 mb-2.5">
-                          <Field
-                            label="Criado"
-                            value={caso.criadoEm}
-                          />
-                          <Field
-                            label="Fechado"
-                            value={caso.fechadoEm ?? "—"}
-                          />
-                        </div>
-
-                        {/* Agente + Atualizado + Ação */}
-                        <div className="flex items-center gap-1.5">
-                          <UserRound className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                          <span className="text-xs text-foreground truncate">
-                            {caso.agente ?? "—"}
-                          </span>
-                          <span className="text-xs text-muted-foreground flex-shrink-0">
-                            · Atualizado {caso.atualizadoEm}
-                          </span>
-                        </div>
+                      {/* Agente + Atualizado + Ação */}
+                      <div className="flex items-center gap-1.5">
+                        <UserRound className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                        <span className="text-xs text-foreground truncate">
+                          {caso.agente ?? "—"}
+                        </span>
+                        <span className="text-xs text-muted-foreground flex-shrink-0">
+                          · Atualizado {caso.atualizadoEm}
+                        </span>
                       </div>
                     </div>
                   );

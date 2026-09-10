@@ -23,7 +23,7 @@ const Text = React.forwardRef<HTMLElement, TextProps>(
       <Component
         ref={ref}
         className={cn(
-          "font-['Roboto'] text-foreground transition-all duration-200",
+          "text-foreground transition-all duration-200",
           weightClasses[weight],
           className
         )}

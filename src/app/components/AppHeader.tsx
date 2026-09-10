@@ -387,25 +387,14 @@ export default function AppHeader() {
     if (pathname.includes("/atendimentos") || pathname === "/")
       return "atendimento";
     if (
-      pathname.includes("/casos") ||
-      pathname.includes("/usuarios")
+      pathname.includes("/gerenciamento") ||
+      pathname.includes("/management")
     )
       return "gerenciamento";
-    if (
-      pathname.includes("/configuracoes") ||
-      pathname.includes("/estrutura")
-    )
+    if (pathname.includes("/configuracoes"))
       return "configuracoes";
-    if (
-      pathname.includes("/relatorios") ||
-      pathname.includes("/analytics")
-    )
+    if (pathname.includes("/analytics"))
       return "analitico";
-    if (
-      pathname.includes("/ajuda") ||
-      pathname.includes("/perfil")
-    )
-      return "outros";
     return "atendimento";
   };
 
@@ -549,43 +538,33 @@ export default function AppHeader() {
               {!isAtendimento && (
                 <>
                   <li>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <div>
-                          <NavItem
-                            label="Gerenciamento"
-                            isActive={
-                              activeItem === "gerenciamento"
-                            }
-                            hasDropdown
-                          />
-                        </div>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        className="w-56"
-                      >
-                        <DropdownMenuItem
-                          onSelect={(e) => e.preventDefault()}
-                        >
-                          Overview
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          Atendimento
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          Atendentes
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          Canais
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          SLA e Metas
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <NavItem label="Início" to="/" />
                   </li>
 
+                  <li>
+                    <NavItem
+                      label="Atendimento"
+                      to="/atendimentos"
+                    />
+                  </li>
+
+                  <li>
+                    <NavItem
+                      label="Gerenciamento"
+                      to="/gerenciamento"
+                      isActive={
+                        activeItem === "gerenciamento"
+                      }
+                    />
+                  </li>
+
+                  <li>
+                    <NavItem
+                      label="Analytics"
+                      to="/analytics"
+                      isActive={activeItem === "analitico"}
+                    />
+                  </li>
 
                   <li>
                     <DropdownMenu>
@@ -837,33 +816,6 @@ export default function AppHeader() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </li>
-
-                  <li>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <div>
-                          <NavItem
-                            label="Analítico"
-                            isActive={
-                              activeItem === "analitico"
-                            }
-                            hasDropdown
-                          />
-                        </div>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        className="w-48"
-                      >
-                        <DropdownMenuItem>
-                          Relatórios
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          Analytics
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </li>
                 </>
               )}
             </ul>
@@ -871,16 +823,18 @@ export default function AppHeader() {
 
           {/* Lado Direito - Ações + Perfil */}
           <div className="flex items-center gap-1.5">
-            {/* Botão Ajuda */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleNavigation("/ajuda")}
-              title="Ajuda"
-              className="h-9 w-9 p-0"
-            >
-              <CircleHelp className="size-4.5" />
-            </Button>
+            {/* Botão Ajuda — só faz sentido dentro de Atendimentos */}
+            {isAtendimento && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleNavigation("/ajuda")}
+                title="Ajuda"
+                className="h-9 w-9 p-0"
+              >
+                <CircleHelp className="size-4.5" />
+              </Button>
+            )}
 
             {/* Wizz Icon Customizado - COMENTADO */}
             {/* <button

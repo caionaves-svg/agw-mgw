@@ -1,4 +1,5 @@
-import { useState, useMemo, Fragment } from "react";
+import { useState, useMemo, useEffect, useRef, Fragment } from "react";
+import { useSearchParams } from "react-router";
 import type { SLA, Tag } from "../contexts/DataContext";
 import { useData, Usuario } from "../contexts/DataContext";
 import { CasePreviewModal } from "../components/CasePreviewModal";
@@ -19,6 +20,8 @@ import {
   Plus,
   X,
   Eye,
+  ExternalLink,
+  FileText,
   CheckCircle2,
   XCircle,
   AlertTriangle,
@@ -222,9 +225,57 @@ export default function CasosManagementPage() {
     });
   };
 
-  // preview modal state
+  // preview modal state — sincronizado com ?caso= na URL, pra permitir link
+  // direto (copiar/abrir em nova aba reabre o mesmo caso)
+  const [searchParams, setSearchParams] = useSearchParams();
   const [previewUsuario, setPreviewUsuario] =
     useState<Usuario | null>(null);
+  // true só quando o preview veio de carregar a URL direto (link/nova aba) —
+  // nesse caso o conteúdo deve ocupar a página inteira, sem o drawer/backdrop
+  // nem o pill de link (você já está nessa própria URL).
+  const [isDeepLink, setIsDeepLink] = useState(false);
+  const initialUrlCheckedRef = useRef(false);
+
+  const openPreview = (u: Usuario) => {
+    setIsDeepLink(false);
+    setPreviewUsuario(u);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("caso", u.id);
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
+  const closePreview = () => {
+    setPreviewUsuario(null);
+    setIsDeepLink(false);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("caso");
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
+  // Abriu com ?caso=ID na URL (link direto) — reabre o preview desse caso,
+  // em página cheia. Só roda uma vez, na carga inicial.
+  useEffect(() => {
+    if (initialUrlCheckedRef.current) return;
+    const casoId = searchParams.get("caso");
+    if (casoId) {
+      const usuario = usuarios.find((u) => u.id === casoId);
+      if (usuario) {
+        setPreviewUsuario(usuario);
+        setIsDeepLink(true);
+      }
+    }
+    initialUrlCheckedRef.current = true;
+  }, [usuarios]);
 
   // table state
   const [searchTerm, setSearchTerm] = useState("");
@@ -349,8 +400,8 @@ export default function CasosManagementPage() {
           sidebarOpen ? "w-44" : "w-0"
         }`}
       >
-        {/* Collapse button row */}
-        <div className="flex items-center justify-end px-2 pt-3 pb-1">
+        {/* Collapse button — colado no topo, acima do divisor da nav */}
+        <div className="flex items-center justify-end px-2 py-1.5 border-b border-border">
           <button
             onClick={() => setSidebarOpen(false)}
             className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
@@ -462,95 +513,100 @@ export default function CasosManagementPage() {
         {/* ── Body ────────────────────────────────────────────────────────── */}
         <div className="flex-1 overflow-hidden flex flex-col px-6 py-4 gap-3 min-h-0">
           {/* ── Toolbar ─────────────────────────────────────────────────── */}
-          <div className="flex items-center justify-between gap-3 flex-wrap flex-shrink-0">
-            {/* Left side */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Count */}
+          <div className="flex flex-col gap-2.5 flex-shrink-0">
+            {/* Linha 1: contagem + busca */}
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                <FileText className="w-4 h-4 text-muted-foreground" />
                 Casos
                 <span className="text-muted-foreground font-normal">
                   {filteredCasos.length}
                 </span>
               </div>
-              <div className="w-px h-4 bg-border" />
 
-              {/* Saved filters preset */}
-              <button className="flex items-center gap-1.5 text-xs border border-border rounded-full px-3 py-1 text-foreground hover:bg-muted transition-colors">
-                <AlignJustify className="w-3 h-3 text-muted-foreground" />
-                Meus Filtros
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
-              </button>
-
-              {/* Active filter chips */}
-              {chips.map((chip) => (
-                <div
-                  key={chip.id}
-                  className="flex items-center gap-1.5 text-xs bg-muted border border-border rounded-full px-2.5 py-1 text-foreground"
-                >
-                  <Plus className="w-3 h-3 text-muted-foreground" />
-                  <span>{chip.label}</span>
-                  <button
-                    onClick={() =>
-                      setChips((prev) =>
-                        prev.filter((c) => c.id !== chip.id),
-                      )
-                    }
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-
-              {/* Add filter */}
-              <button className="flex items-center gap-1.5 text-xs bg-primary text-primary-foreground rounded-full px-3 py-1 hover:bg-primary/90 transition-colors">
-                <Plus className="w-3 h-3" />
-                Adicionar Filtro
-                <ChevronDown className="w-3 h-3" />
-              </button>
+              <div className="flex items-center gap-2">
+                <SearchInput
+                  placeholder="Busque por Casos..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setPage(1);
+                  }}
+                  showIcon
+                  className="w-52"
+                />
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                        <Columns3 className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p className="text-xs">
+                        Configurar colunas
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
 
-            {/* Right side */}
-            <div className="flex items-center gap-2">
-              <button className="text-xs text-primary hover:underline whitespace-nowrap">
-                Salvar Filtros
-              </button>
-              <button className="text-xs text-muted-foreground hover:text-foreground whitespace-nowrap">
-                Limpar Todos
-              </button>
-              <Button
-                variant="brand"
-                size="sm"
-                className="gap-1.5 text-xs"
-              >
-                <RefreshCw className="w-3 h-3" />
-                Aplicar
-              </Button>
-              <div className="w-px h-4 bg-border" />
-              <SearchInput
-                placeholder="Busque por Casos..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setPage(1);
-                }}
-                showIcon
-                className="w-52"
-              />
-              <TooltipProvider delayDuration={200}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
-                      <Columns3 className="w-4 h-4" />
+            {/* Linha 2: filtros + ações */}
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Saved filters preset */}
+                <button className="flex items-center gap-1.5 text-xs border border-primary/40 text-primary rounded-full px-3 py-1 hover:bg-primary/5 transition-colors">
+                  <AlignJustify className="w-3 h-3" />
+                  Meus Filtros
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+
+                {/* Active filter chips */}
+                {chips.map((chip) => (
+                  <div
+                    key={chip.id}
+                    className="flex items-center gap-1.5 text-xs border border-border rounded-full px-2.5 py-1 text-foreground"
+                  >
+                    <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                    <span>{chip.label}</span>
+                    <button
+                      onClick={() =>
+                        setChips((prev) =>
+                          prev.filter((c) => c.id !== chip.id),
+                        )
+                      }
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="w-3 h-3" />
                     </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p className="text-xs">
-                      Configurar colunas
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </div>
+                ))}
+
+                {/* Add filter */}
+                <button className="flex items-center gap-1.5 text-xs bg-primary text-primary-foreground rounded-full px-3 py-1 hover:bg-primary/90 transition-colors">
+                  <Plus className="w-3 h-3" />
+                  Adicionar Filtro
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button className="text-xs text-primary hover:underline whitespace-nowrap">
+                  Salvar Filtros
+                </button>
+                <button className="text-xs text-muted-foreground hover:text-foreground whitespace-nowrap">
+                  Limpar Todos
+                </button>
+                <Button
+                  variant="brand"
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Aplicar
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -695,7 +751,7 @@ export default function CasosManagementPage() {
                                 <TooltipTrigger asChild>
                                   <button
                                     onClick={() =>
-                                      setPreviewUsuario(u)
+                                      openPreview(u)
                                     }
                                     className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors flex-shrink-0"
                                   >
@@ -705,6 +761,31 @@ export default function CasosManagementPage() {
                                 <TooltipContent side="bottom">
                                   <p className="text-xs">
                                     Visualizar atendimento
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider
+                              delayDuration={300}
+                            >
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={() =>
+                                      window.open(
+                                        `${window.location.origin}/management/cases?caso=${u.id}`,
+                                        "_blank",
+                                        "noopener,noreferrer",
+                                      )
+                                    }
+                                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors flex-shrink-0"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom">
+                                  <p className="text-xs">
+                                    Abrir em nova aba
                                   </p>
                                 </TooltipContent>
                               </Tooltip>
@@ -909,7 +990,8 @@ export default function CasosManagementPage() {
       {previewUsuario && (
         <CasePreviewModal
           usuario={previewUsuario}
-          onClose={() => setPreviewUsuario(null)}
+          onClose={closePreview}
+          fullPage={isDeepLink}
         />
       )}
     </div>

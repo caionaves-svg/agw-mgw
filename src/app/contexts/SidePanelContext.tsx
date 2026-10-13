@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useRef, useState, ReactNode } from 'react';
 
 export type SidePanelContentType =
   | 'wizz'
@@ -14,6 +14,7 @@ export type SidePanelContentType =
   | 'historico-casos'
   | 'historico-cliente'
   | 'enquetes'
+  | 'collab'
   | null;
 
 // Seções que são "informativas" (podem coexistir com Ações)
@@ -38,6 +39,10 @@ interface SidePanelContextType {
   setSelectedAtendimento: (atendimento: any | null) => void;
   isDualMode: boolean; // True quando há seção info + ações abertas
   selectAtendimentoAndOpen: (atendimento: any) => void; // Nova função para selecionar e abrir automaticamente
+  /** Abre o cVortex Collab no painel, guardando as seções abertas */
+  openCollab: () => void;
+  /** Fecha o Collab e restaura as seções que estavam abertas antes */
+  closeCollab: () => void;
 }
 
 const SidePanelContext = createContext<SidePanelContextType | undefined>(undefined);
@@ -48,12 +53,21 @@ export function SidePanelProvider({ children }: { children: ReactNode }) {
   const [actionSection, setActionSection] = useState<SidePanelContentType>(null); // Sem ações inicial
   const [selectedAtendimento, setSelectedAtendimento] = useState<any | null>(null);
 
+  // Seções abertas antes do Collab assumir o painel (restauradas ao fechá-lo)
+  const beforeCollabRef = useRef<{
+    isOpen: boolean;
+    contentType: SidePanelContentType;
+    actionSection: SidePanelContentType;
+  } | null>(null);
+
   const isDualMode = isOpen && 
     contentType && 
     INFO_SECTIONS.includes(contentType) && 
     actionSection === 'acoes';
 
   const openPanel = (type: SidePanelContentType, atendimento?: any) => {
+    // Abrir outra seção por cima do Collab descarta o "voltar para"
+    if (type !== 'collab') beforeCollabRef.current = null;
     if (type) {
       if (type === 'acoes') {
         // Ações: adiciona como seção secundária se já tem uma info aberta
@@ -83,6 +97,7 @@ export function SidePanelProvider({ children }: { children: ReactNode }) {
   };
 
   const closePanel = () => {
+    beforeCollabRef.current = null;
     setIsOpen(false);
     setContentType(null);
     setActionSection(null);
@@ -118,7 +133,31 @@ export function SidePanelProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const openCollab = () => {
+    if (contentType !== 'collab') {
+      beforeCollabRef.current = { isOpen, contentType, actionSection };
+    }
+    setContentType('collab');
+    setActionSection(null);
+    setIsOpen(true);
+  };
+
+  const closeCollab = () => {
+    const prev = beforeCollabRef.current;
+    beforeCollabRef.current = null;
+    if (prev && prev.isOpen && prev.contentType && prev.contentType !== 'collab') {
+      setContentType(prev.contentType);
+      setActionSection(prev.actionSection);
+      setIsOpen(true);
+    } else {
+      setIsOpen(false);
+      setContentType(null);
+      setActionSection(null);
+    }
+  };
+
   const selectAtendimentoAndOpen = (atendimento: any) => {
+    beforeCollabRef.current = null;
     setSelectedAtendimento(atendimento);
     // Abre automaticamente em modo dual: Informações + Ações
     setContentType('info');
@@ -137,7 +176,9 @@ export function SidePanelProvider({ children }: { children: ReactNode }) {
       togglePanel,
       setSelectedAtendimento,
       isDualMode,
-      selectAtendimentoAndOpen
+      selectAtendimentoAndOpen,
+      openCollab,
+      closeCollab
     }}>
       {children}
     </SidePanelContext.Provider>

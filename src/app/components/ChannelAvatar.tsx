@@ -115,7 +115,12 @@ const channelColors = {
 
 interface ChannelAvatarProps {
   nome: string;
-  channel: ChannelType;
+  /** Sem canal, o badge não é exibido */
+  channel?: ChannelType;
+  /** "md": 36px (listas do Collab) · "sm": 28px (comentários internos) */
+  size?: "default" | "md" | "sm";
+  /** Cor do indicador de presença (canto inferior direito) */
+  statusColor?: string;
   className?: string;
 }
 
@@ -136,27 +141,43 @@ function getAvatarColor(nome: string): string {
 export default function ChannelAvatar({
   nome,
   channel,
-  className,
+  size = "default",
+  statusColor,
+  className = "",
 }: ChannelAvatarProps) {
-  const channelColor = channelColors[channel];
+  const sizeClasses = {
+    default: { avatar: "w-12 h-12", text: "text-sm border-2 border-background" },
+    md: { avatar: "w-9 h-9", text: "text-xs border border-background" },
+    sm: { avatar: "w-7 h-7", text: "text-[10px] border border-background" },
+  }[size];
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative h-fit w-fit ${className}`}>
       {/* Avatar principal */}
-      <Avatar className="w-12 h-12">
+      <Avatar className={sizeClasses.avatar}>
         <AvatarFallback
-          className={`${getAvatarColor(nome)} text-muted-foreground font-medium text-sm border-2 border-background`}
+          className={`${getAvatarColor(nome)} text-muted-foreground font-medium ${sizeClasses.text}`}
         >
           {getInitials(nome)}
         </AvatarFallback>
       </Avatar>
 
+      {/* Indicador de presença no canto inferior direito */}
+      {statusColor && (
+        <span
+          className={`absolute bottom-0 right-0 rounded-full border-2 border-background ${size === "default" ? "w-3.5 h-3.5" : "w-2.5 h-2.5"}`}
+          style={{ backgroundColor: statusColor }}
+        />
+      )}
+
       {/* Ícone do canal no canto inferior direito */}
-      <div
-        className={`absolute bottom-0 right-0 translate-x-0.5 translate-y-0.5 ${channelColor} rounded-full size-5 flex items-center justify-center border-2 border-background`}
-      >
-        {getChannelIcon(channel, "white")}
-      </div>
+      {channel && (
+        <div
+          className={`absolute bottom-0 right-0 translate-x-0.5 translate-y-0.5 ${channelColors[channel]} rounded-full size-5 flex items-center justify-center border-2 border-background`}
+        >
+          {getChannelIcon(channel, "white")}
+        </div>
+      )}
     </div>
   );
 }

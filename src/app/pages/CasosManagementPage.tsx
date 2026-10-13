@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router";
 import type { SLA, Tag } from "../contexts/DataContext";
 import { useData, Usuario } from "../contexts/DataContext";
 import { CasePreviewModal } from "../components/CasePreviewModal";
+import { openCaseInNewTab } from "../components/CaseIdBadge";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { SearchInput } from "../components/ui/search-input";
@@ -764,13 +765,7 @@ export default function CasosManagementPage() {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <button
-                                    onClick={() =>
-                                      window.open(
-                                        `${window.location.origin}/management/cases?caso=${u.id}`,
-                                        "_blank",
-                                        "noopener,noreferrer",
-                                      )
-                                    }
+                                    onClick={() => openCaseInNewTab(u.id)}
                                     className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors flex-shrink-0"
                                   >
                                     <ExternalLink className="w-3.5 h-3.5" />
@@ -783,7 +778,11 @@ export default function CasosManagementPage() {
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
-                            <button className="text-primary hover:underline font-medium text-xs tabular-nums">
+                            <button
+                              onClick={() => openCaseInNewTab(u.id)}
+                              title="Abrir detalhamento do caso em nova aba"
+                              className="text-primary hover:underline font-medium text-xs tabular-nums"
+                            >
                               {u.id}
                             </button>
                           </div>

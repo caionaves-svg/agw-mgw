@@ -15,8 +15,13 @@ import { PermissionsProvider } from "./contexts/PermissionsContext";
 import { SidePanelProvider } from "./contexts/SidePanelContext";
 import GlobalRightPanel from "./components/GlobalRightPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { Toaster } from "sonner";
+import { CollabProvider } from "./contexts/CollabContext";
+import CollabPanel from "./components/collab/CollabPanel";
+import { usePreferences } from "./contexts/PreferencesContext";
 
 function Layout() {
+  const { theme } = usePreferences();
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden relative">
       {/* Navbar no topo */}
@@ -61,6 +66,15 @@ function Layout() {
         {/* Painel Global - agora dentro do flex, empurra o conteúdo */}
         <GlobalRightPanel />
       </div>
+
+      {/* cVortex Collab - menções e conversas diretas */}
+      <CollabPanel />
+      <Toaster
+        position="top-right"
+        offset={72}
+        theme={theme === "dark" ? "dark" : theme === "light" ? "light" : "system"}
+        closeButton
+      />
     </div>
   );
 }
@@ -73,7 +87,9 @@ export default function App() {
           <CallProvider>
             <SidePanelProvider>
               <DataProvider>
-                <Layout />
+                <CollabProvider>
+                  <Layout />
+                </CollabProvider>
               </DataProvider>
             </SidePanelProvider>
           </CallProvider>

@@ -8,6 +8,7 @@ import { Separator } from "./ui/separator";
 import { usePreferences } from "../contexts/PreferencesContext";
 import { useSidePanel } from "../contexts/SidePanelContext";
 import UserMenu from "./UserMenu";
+import CollabButton from "./collab/CollabButton";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useState, useEffect } from "react";
 import {
@@ -844,6 +845,9 @@ export default function AppHeader() {
                 <CircleHelp className="size-4.5" />
               </Button>
             )}
+
+            {/* cVortex Collab — menções e conversas diretas */}
+            <CollabButton />
 
             {/* Wizz Icon Customizado - COMENTADO */}
             {/* <button

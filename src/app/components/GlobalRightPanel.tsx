@@ -17,6 +17,7 @@ import { HistoricoCasosSection } from "./interaction-panel/HistoricoCasosSection
 import { HistoricoClienteSection } from "./interaction-panel/HistoricoClienteSection";
 import { EnquetesSection } from "./interaction-panel/EnquetesSection";
 import { InteractionSidebarButtons } from "./interaction-panel/InteractionSidebarButtons";
+import { CollabSection } from "./collab/CollabPanel";
 import {
   Info,
   Star,
@@ -93,6 +94,7 @@ export default function GlobalRightPanel() {
       case "comentarios":
         return (
           <InternalCommentsSection
+            atendimento={selectedAtendimento}
             onClose={() => togglePanel("comentarios")}
           />
         );
@@ -121,6 +123,8 @@ export default function GlobalRightPanel() {
             onClose={() => togglePanel("enquetes")}
           />
         );
+      case "collab":
+        return <CollabSection />;
       case "acoes":
         return (
           <ActionsSection

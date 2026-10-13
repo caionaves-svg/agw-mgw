@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router";
 import { AtendimentosSidebar } from "../components/atendimentos/AtendimentosSidebar";
 import ChatPanel from "../components/ChatPanel";
 import { useData, Usuario } from "../contexts/DataContext";
@@ -48,7 +49,13 @@ function sortTodosAtendimentos(contatos: Usuario[]): Usuario[] {
 export default function AtendimentosPage() {
   const dataContext = useData();
   const { usuarios } = dataContext;
-  const { selectAtendimentoAndOpen, selectedAtendimento: contextSelectedAtendimento } = useSidePanel();
+  const { selectAtendimentoAndOpen, openPanel, setSelectedAtendimento, selectedAtendimento: contextSelectedAtendimento } = useSidePanel();
+  const location = useLocation();
+  const navigate = useNavigate();
+  // Vindo de uma menção do cVortex Collab: abre o caso já nos comentários internos
+  const abrirComentariosRef = useRef(false);
+  // Vindo do Collab no painel lateral: troca só o chat, sem mexer no painel
+  const manterPainelRef = useRef(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("todos"); // Filtro por tag
@@ -184,6 +191,27 @@ export default function AtendimentosPage() {
       }
     : undefined;
 
+  // Abrir caso vindo do cVortex Collab (navigate com state { abrirCaso })
+  useEffect(() => {
+    const state = location.state as { abrirCaso?: string; manterCollab?: boolean } | null;
+    const casoId = state?.abrirCaso;
+    if (!casoId) return;
+    navigate(location.pathname, { replace: true, state: null });
+    const contato = usuarios.find((u) => u.id === casoId);
+    if (!contato) return;
+    if (state?.manterCollab) {
+      if (selectedContact?.id !== contato.id) {
+        manterPainelRef.current = true;
+        handleContactClick(contato);
+      }
+    } else if (selectedContact?.id === contato.id) {
+      openPanel("comentarios");
+    } else {
+      abrirComentariosRef.current = true;
+      handleContactClick(contato);
+    }
+  }, [location.state]);
+
   // Sincronizar atendimento selecionado com o contexto global
   useEffect(() => {
     if (selectedAtendimento) {
@@ -193,8 +221,15 @@ export default function AtendimentosPage() {
         !contextSelectedAtendimento || 
         contextSelectedAtendimento.id !== selectedAtendimento.id;
       
-      if (isDifferentAtendimento) {
+      if (manterPainelRef.current) {
+        manterPainelRef.current = false;
+        setSelectedAtendimento(selectedAtendimento);
+      } else if (isDifferentAtendimento) {
         selectAtendimentoAndOpen(selectedAtendimento);
+      }
+      if (abrirComentariosRef.current) {
+        abrirComentariosRef.current = false;
+        openPanel("comentarios");
       }
     }
   }, [selectedAtendimento?.id]); // Apenas quando o ID muda

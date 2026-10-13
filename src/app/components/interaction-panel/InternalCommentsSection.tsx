@@ -1,387 +1,181 @@
 import { useState, useRef, useEffect } from "react";
-import {
-  MessageSquare,
-  X,
-  Paperclip,
-  Smile,
-  SendHorizontal,
-  Mic,
-  Bold,
-  Italic,
-  Link,
-} from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "../ui/button";
+import CommentInput, { CommentPayload } from "../comments/CommentInput";
+import CommentThread, {
+  CaseCommentsHeading,
+  CommentVisibilityNote,
+  ThreadComment,
+  commentSnippet,
+  findThreadComment,
+} from "../comments/CommentThread";
+import "../comments/comments.css";
 
 interface InternalCommentsSectionProps {
   onClose: () => void;
+  /** Atendimento/caso a que os comentários pertencem */
+  atendimento?: { id: string; cliente?: { nome: string } } | null;
 }
 
-interface Comment {
-  id: string;
-  autor: string;
-  timestamp: string;
-  texto: string;
-  respostas?: Comment[];
+const mention = (id: string, label: string) =>
+  `<span data-type="mention" data-id="${id}" data-label="${label}" class="cv-mention">@${label}</span>`;
+
+const comentario = (
+  c: Omit<ThreadComment, "isMine"> & { isMine?: boolean },
+): ThreadComment => ({ isMine: false, ...c });
+
+function addReply(list: ThreadComment[], parentId: string, reply: ThreadComment): ThreadComment[] {
+  return list.map((c) =>
+    c.id === parentId
+      ? { ...c, respostas: [...(c.respostas ?? []), reply] }
+      : c.respostas
+        ? { ...c, respostas: addReply(c.respostas, parentId, reply) }
+        : c,
+  );
 }
 
 export function InternalCommentsSection({
   onClose,
+  atendimento,
 }: InternalCommentsSectionProps) {
-  const [comentarios, setComentarios] = useState<Comment[]>([
-    {
+  const [comentarios, setComentarios] = useState<ThreadComment[]>([
+    comentario({
       id: "1",
-      autor: "Maria Silva",
+      autorNome: "Maria Silva",
       timestamp: "14:35",
-      texto:
-        "Cliente solicitou cancelamento de serviço. Protocolo de cancelamento iniciado.",
+      html: "<p>Cliente solicitou cancelamento de serviço. Protocolo de cancelamento iniciado.</p>",
       respostas: [
-        {
+        comentario({
           id: "1-1",
-          autor: "João Santos",
+          autorNome: "João Santos",
           timestamp: "14:40",
-          texto:
-            "Validado protocolo e enviado para financeiro.",
+          html: `<p>Validado protocolo e enviado para financeiro. ${mention("u-maria", "Maria Silva")} acompanha por aqui?</p>`,
           respostas: [
-            {
+            comentario({
               id: "1-1-1",
-              autor: "Maria Silva",
+              autorNome: "Maria Silva",
               timestamp: "14:45",
-              texto: "Perfeito! Vou acompanhar o processo.",
-            },
+              html: "<p>Perfeito! Vou acompanhar o processo.</p>",
+            }),
           ],
-        },
+        }),
       ],
-    },
-    {
+    }),
+    comentario({
       id: "2",
-      autor: "Carlos Oliveira",
+      autorNome: "Carlos Oliveira",
       timestamp: "15:20",
-      texto:
-        "Cliente está aguardando retorno sobre a contestação da fatura.",
+      html: `<p>Cliente está aguardando retorno sobre a contestação da fatura. ${mention("u-ana", "Ana Costa")} consegue priorizar?</p>`,
       respostas: [
-        {
+        comentario({
           id: "2-1",
-          autor: "Ana Costa",
+          autorNome: "Ana Costa",
           timestamp: "15:25",
-          texto:
-            "Já estou verificando com o financeiro. Retorno em breve.",
-        },
+          html: "<p>Já estou verificando com o financeiro. Retorno em <strong>breve</strong>.</p>",
+        }),
       ],
-    },
-    {
+    }),
+    comentario({
       id: "3",
-      autor: "Pedro Alves",
+      autorNome: "Pedro Alves",
       timestamp: "16:10",
-      texto:
-        "Atendimento finalizado com sucesso. Cliente satisfeito com a resolução.",
-    },
+      html: "<p>Atendimento finalizado com sucesso. Cliente satisfeito com a resolução.</p>",
+    }),
   ]);
 
-  const [respondendoId, setRespondendoId] = useState<
-    string | null
-  >(null);
-  const [textoResposta, setTextoResposta] = useState("");
-  const [textoNovoComentario, setTextoNovoComentario] =
-    useState("");
-  const textareaRespostaRef = useRef<HTMLTextAreaElement>(null);
-  const textareaNovoRef = useRef<HTMLTextAreaElement>(null);
+  const [respondendoId, setRespondendoId] = useState<string | null>(null);
+  const [destaqueId, setDestaqueId] = useState<string | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const scrollToBottomRef = useRef(false);
 
-  // Auto-resize textarea de resposta
   useEffect(() => {
-    if (textareaRespostaRef.current) {
-      textareaRespostaRef.current.style.height = "40px";
-      textareaRespostaRef.current.style.height =
-        textareaRespostaRef.current.scrollHeight + "px";
+    if (scrollToBottomRef.current && listRef.current) {
+      listRef.current.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+      scrollToBottomRef.current = false;
     }
-  }, [textoResposta]);
+  }, [comentarios]);
 
-  // Auto-resize textarea novo comentário
+  // Leva a resposta recém-criada para a área visível e destaca por instantes
   useEffect(() => {
-    if (textareaNovoRef.current) {
-      textareaNovoRef.current.style.height = "40px";
-      textareaNovoRef.current.style.height =
-        textareaNovoRef.current.scrollHeight + "px";
-    }
-  }, [textoNovoComentario]);
+    if (!destaqueId) return;
+    listRef.current
+      ?.querySelector(`[data-comment-id="${destaqueId}"]`)
+      ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    const t = setTimeout(() => setDestaqueId(null), 1500);
+    return () => clearTimeout(t);
+  }, [destaqueId]);
 
-  const handleResponder = (comentarioId: string) => {
-    setRespondendoId(comentarioId);
-    setTextoResposta("");
-  };
+  const criarComentario = (
+    conteudo: Pick<ThreadComment, "html" | "audio" | "mencionados">,
+  ): ThreadComment => ({
+    id: Date.now().toString(),
+    autorNome: "Você",
+    isMine: true,
+    timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+    ...conteudo,
+  });
 
-  const handleCancelarResposta = () => {
-    setRespondendoId(null);
-    setTextoResposta("");
-  };
+  const fromPayload = ({ html, mentions }: CommentPayload) =>
+    criarComentario({ html, mencionados: mentions.length ? mentions : undefined });
 
-  const handleEnviarResposta = () => {
-    if (!textoResposta.trim() || !respondendoId) return;
-
-    // Lógica para adicionar resposta
-    console.log(
-      "Enviando resposta:",
-      textoResposta,
-      "para comentário:",
-      respondendoId,
-    );
-
-    setRespondendoId(null);
-    setTextoResposta("");
-  };
-
-  const handleEnviarNovoComentario = () => {
-    if (!textoNovoComentario.trim()) return;
-
-    const novoComentario: Comment = {
-      id: Date.now().toString(),
-      autor: "Você",
-      timestamp: new Date().toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      texto: textoNovoComentario,
-    };
-
-    setComentarios([...comentarios, novoComentario]);
-    setTextoNovoComentario("");
-  };
-
-  const handleKeyPress = (
-    e: React.KeyboardEvent,
-    callback: () => void,
-  ) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      callback();
+  // Envia como resposta (se houver um comentário selecionado) ou como novo
+  const enviar = (novo: ThreadComment) => {
+    if (respondendoId) {
+      setComentarios((prev) => addReply(prev, respondendoId, novo));
+      setRespondendoId(null);
+      setDestaqueId(novo.id);
+    } else {
+      scrollToBottomRef.current = true;
+      setComentarios((prev) => [...prev, novo]);
     }
   };
 
-  const renderComment = (
-    comment: Comment,
-    level: number = 0,
-  ) => {
-    const isRespondendo = respondendoId === comment.id;
-    const marginLeft =
-      level === 0 ? "" : level === 1 ? "ml-8" : "ml-16";
-    const borderLeft =
-      level > 0 ? "border-l-2 border-border pl-3" : "";
-
-    return (
-      <div key={comment.id} className={`${marginLeft}`}>
-        <div className={`${borderLeft} py-2`}>
-          {/* Header do comentário */}
-          <div className="mb-2">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm text-foreground font-normal">
-                {comment.autor}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                {comment.timestamp}
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed break-words">
-              {comment.texto}
-            </p>
-            {/* Botão Responder - apenas se não estiver no nível 2 */}
-            {level < 2 && (
-              <button
-                onClick={() => handleResponder(comment.id)}
-                className="text-sm text-brand-primary hover:underline mt-1"
-              >
-                Responder
-              </button>
-            )}
-          </div>
-
-          {/* Campo de resposta */}
-          {isRespondendo && (
-            <div className="mt-2 ml-10">
-              <div className="bg-[#f0f2f5] rounded-[8px] p-2">
-                <div className="flex items-end gap-2 bg-background rounded-[8px] shadow-sm px-3 py-2 border border-[#e6e6e6]">
-                  <Button
-                    variant="ghost"
-                    size="lg"
-                    className="shrink-0 p-2"
-                  >
-                    <Paperclip className="w-5 h-5 text-[#465459]" />
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="lg"
-                    className="shrink-0 p-2"
-                  >
-                    <Smile className="w-5 h-5 text-[#465459]" />
-                  </Button>
-
-                  <div className="flex-1 flex items-center">
-                    <textarea
-                      ref={textareaRespostaRef}
-                      value={textoResposta}
-                      onChange={(e) =>
-                        setTextoResposta(e.target.value)
-                      }
-                      onKeyPress={(e) =>
-                        handleKeyPress(e, handleEnviarResposta)
-                      }
-                      placeholder="Digite sua resposta..."
-                      className="w-full resize-none h-10 min-h-10 bg-transparent border-0 px-2 py-2 text-sm text-[#465459] placeholder:text-[#a4a4a4] focus:outline-none focus:ring-0 transition-all duration-200 custom-scrollbar"
-                      rows={1}
-                    />
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleCancelarResposta}
-                    className="shrink-0 p-2 text-[#8f8f8f] hover:text-[#465459]"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-
-                  <Button
-                    variant={
-                      textoResposta.trim() ? "brand" : "ghost"
-                    }
-                    size="lg"
-                    className="shrink-0 p-2"
-                    onClick={
-                      textoResposta.trim()
-                        ? handleEnviarResposta
-                        : undefined
-                    }
-                  >
-                    {textoResposta.trim() ? (
-                      <SendHorizontal className="w-5 h-5 text-white" />
-                    ) : (
-                      <Mic className="w-5 h-5 text-[#465459]" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Renderizar respostas recursivamente */}
-        {comment.respostas && comment.respostas.length > 0 && (
-          <div>
-            {comment.respostas.map((resposta) =>
-              renderComment(resposta, level + 1),
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
+  const comentarioRespondido = respondendoId
+    ? findThreadComment(comentarios, respondendoId)
+    : undefined;
 
   return (
     <div className="bg-background rounded-xl overflow-hidden h-full flex flex-col">
-      {/* Header com título e botão close */}
-      <div className="p-4 flex items-center justify-between flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="text-base font-medium text-foreground">
-            Comentários internos
-          </span>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="h-6 w-6 p-0"
-        >
+      {/* Header: de qual caso são estes comentários */}
+      <div className="px-4 py-3 flex items-start justify-between gap-2 flex-shrink-0">
+        <CaseCommentsHeading
+          casoId={atendimento?.id}
+          clienteNome={atendimento?.cliente?.nome}
+        />
+        <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0 shrink-0">
           <X className="w-4 h-4" />
         </Button>
       </div>
 
-      {/* Lista de comentários */}
-      <div className="flex-1 px-4 pb-2 overflow-y-auto custom-scrollbar">
-        <div className="space-y-4">
-          {comentarios.map((comentario) =>
-            renderComment(comentario),
-          )}
-        </div>
+      {/* Fio de comentários */}
+      <div ref={listRef} className="flex-1 px-3 py-2 overflow-y-auto custom-scrollbar">
+        <CommentThread
+          comments={comentarios}
+          respondendoId={respondendoId}
+          destaqueId={destaqueId}
+          onReply={(c) => setRespondendoId(c.id)}
+        />
       </div>
 
-      {/* Textarea flutuante para novo comentário */}
-      <div className="flex-shrink-0 rounded-t-xl border-t border-border bg-background">
-        <div className="flex flex-col">
-          {/* Textarea em cima */}
-          <div className="flex-1 rounded-top-3xl px-3 pt-3">
-            <textarea
-              ref={textareaNovoRef}
-              value={textoNovoComentario}
-              onChange={(e) =>
-                setTextoNovoComentario(e.target.value)
-              }
-              onKeyPress={(e) =>
-                handleKeyPress(e, handleEnviarNovoComentario)
-              }
-              placeholder="Adicionar comentário interno..."
-              className="w-full resize-none h-6 max-h-10 bg-transparent border-0 px-0 py-0 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 transition-all duration-200 custom-scrollbar overflow-y-auto"
-              rows={1}
-              style={{ lineHeight: "20px" }}
-            />
-          </div>
-
-          {/* Botões embaixo */}
-          <div className="flex items-center justify-between px-3 pb-3 pt-2">
-            {/* Botões de formatação à esquerda */}
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                title="Emoji"
-              >
-                <Smile className="w-4 h-4 text-[#717182]" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                title="Negrito"
-              >
-                <Bold className="w-4 h-4 text-[#717182]" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                title="Itálico"
-              >
-                <Italic className="w-4 h-4 text-[#717182]" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                title="Link"
-              >
-                <Link className="w-4 h-4 text-[#717182]" />
-              </Button>
-            </div>
-
-            {/* Botão Enviar */}
-            <Button
-              variant={
-                textoNovoComentario.trim() ? "brand" : "ghost"
-              }
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={
-                textoNovoComentario.trim()
-                  ? handleEnviarNovoComentario
-                  : undefined
-              }
-              disabled={!textoNovoComentario.trim()}
-            >
-              <SendHorizontal
-                className={`w-4 h-4 ${textoNovoComentario.trim() ? "text-white" : "text-[#717182]"}`}
-              />
-            </Button>
-          </div>
-        </div>
+      {/* Visibilidade + input (mesma UI do input dos canais) */}
+      <div className="flex-shrink-0">
+        <CommentVisibilityNote />
+        <CommentInput
+          size="sm"
+          showAI={false}
+          replyingTo={
+            comentarioRespondido && {
+              autorNome: comentarioRespondido.autorNome,
+              snippet: commentSnippet(comentarioRespondido),
+            }
+          }
+          onCancelReply={() => setRespondendoId(null)}
+          placeholder={
+            comentarioRespondido ? `Responder ${comentarioRespondido.autorNome}...` : undefined
+          }
+          onSend={(payload) => enviar(fromPayload(payload))}
+          onSendAudio={(duracao) => enviar(criarComentario({ audio: { duracao } }))}
+        />
       </div>
     </div>
   );

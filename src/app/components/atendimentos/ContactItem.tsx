@@ -8,6 +8,7 @@ import {
   PinOff,
 } from "lucide-react";
 import ChannelAvatar from "../ChannelAvatar";
+import CaseIdBadge from "../CaseIdBadge";
 import { useData, Usuario } from "../../contexts/DataContext";
 import {
   Tooltip,
@@ -217,9 +218,7 @@ export function ContactItem({
             >
               {contato.nome}
             </span>
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded flex-shrink-0">
-              {contato.id}
-            </span>
+            <CaseIdBadge casoId={contato.id} />
           </h3>
           <div className="flex items-center gap-2">
             <TooltipProvider delayDuration={200}>

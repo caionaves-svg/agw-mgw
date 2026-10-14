@@ -4,9 +4,6 @@ import type { SLA, Tag } from "../contexts/DataContext";
 import { useData, Usuario } from "../contexts/DataContext";
 import { CasePreviewModal } from "../components/CasePreviewModal";
 import { openCaseInNewTab } from "../components/CaseIdBadge";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
-import { SearchInput } from "../components/ui/search-input";
 import {
   Tooltip,
   TooltipContent,
@@ -18,8 +15,6 @@ import {
   ChevronUp,
   ChevronLeft,
   ChevronRight,
-  Plus,
-  X,
   Eye,
   ExternalLink,
   FileText,
@@ -36,13 +31,26 @@ import {
   ArrowUp,
   ArrowDown,
   MessageCircle,
-  AlignJustify,
+  Search,
+  SlidersHorizontal,
+  PlusCircle,
 } from "lucide-react";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 type TipoCasoVariant =
-  "green" | "yellow" | "purple" | "blue" | "info" | "gray";
+  "orange" | "green" | "yellow" | "purple" | "blue" | "info" | "gray";
+
+// Chips de "Tipo de Caso" no padrão de produção: texto colorido sobre fundo claro
+const TIPO_CASO_CLASSES: Record<TipoCasoVariant, string> = {
+  orange: "bg-orange-50 text-orange-600 dark:bg-orange-950/40 dark:text-orange-300",
+  green: "bg-green-50 text-green-600 dark:bg-green-950/40 dark:text-green-300",
+  yellow: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+  purple: "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300",
+  blue: "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300",
+  info: "bg-cyan-50 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300",
+  gray: "bg-muted text-muted-foreground",
+};
 
 function getTipoCaso(channel: string): {
   label: string;
@@ -50,7 +58,7 @@ function getTipoCaso(channel: string): {
 } {
   switch (channel) {
     case "whatsapp":
-      return { label: "SAC WhatsApp", variant: "green" };
+      return { label: "SAC WhatsApp", variant: "orange" };
     case "email":
       return { label: "SAC E-mail", variant: "yellow" };
     case "instagram":
@@ -58,7 +66,7 @@ function getTipoCaso(channel: string): {
     case "facebook":
       return { label: "SAC Facebook", variant: "blue" };
     case "telefone":
-      return { label: "SAC Voz", variant: "info" };
+      return { label: "SAC Voz", variant: "green" };
     default:
       return { label: "Tipo Temporário", variant: "gray" };
   }
@@ -393,28 +401,27 @@ export default function CasosManagementPage() {
 
   return (
     <div className="h-full flex flex-row bg-background overflow-hidden relative">
-      {/* ── Left Sidebar ────────────────────────────────────────────────── */}
+      {/* ── Left Sidebar (padrão de produção) ───────────────────────────── */}
       <div
         className={`flex-shrink-0 bg-background flex flex-col transition-all duration-200 overflow-hidden ${
           sidebarOpen ? "w-44 border-r border-border" : "w-0"
         }`}
       >
-        {/* Nav sections */}
-        <nav className="flex-1 overflow-y-auto pt-4 pb-1">
+        <nav className="flex-1 overflow-y-auto pt-3 pb-2">
           {NAV_SECTIONS.map((section) => {
             const collapsed = collapsedSections.has(section.id);
             return (
-              <div key={section.id} className="mb-1">
+              <div key={section.id} className="mb-2">
                 {/* Section header */}
                 <button
                   onClick={() => toggleSection(section.id)}
-                  className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 text-[13px] font-medium text-primary hover:text-primary/80 transition-colors"
                 >
                   <span>{section.label}</span>
                   {collapsed ? (
-                    <ChevronDown className="w-3 h-3" />
+                    <ChevronDown className="w-3.5 h-3.5" />
                   ) : (
-                    <ChevronUp className="w-3 h-3" />
+                    <ChevronUp className="w-3.5 h-3.5" />
                   )}
                 </button>
 
@@ -422,18 +429,15 @@ export default function CasosManagementPage() {
                 {!collapsed && (
                   <div className="flex flex-col">
                     {section.items.map((item) => {
-                      const isActive =
-                        activeNavItem === item.id;
+                      const isActive = activeNavItem === item.id;
                       return (
                         <button
                           key={item.id}
-                          onClick={() =>
-                            setActiveNavItem(item.id)
-                          }
-                          className={`text-left text-xs px-4 py-1.5 transition-colors relative ${
+                          onClick={() => setActiveNavItem(item.id)}
+                          className={`text-left text-sm pl-7 pr-3 py-2 leading-snug transition-colors relative ${
                             isActive
-                              ? "text-primary font-semibold before:absolute before:left-0 before:top-1 before:bottom-1 before:w-0.5 before:bg-primary before:rounded-r"
-                              : "text-foreground hover:text-primary hover:bg-muted/50"
+                              ? "text-primary before:absolute before:left-0 before:top-1 before:bottom-1 before:w-0.5 before:bg-primary"
+                              : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
                           {item.label}
@@ -470,17 +474,17 @@ export default function CasosManagementPage() {
       {/* ── Main Content ─────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* ── Page Header ─────────────────────────────────────────────────── */}
-        <div className="flex items-start justify-between px-6 pt-5 pb-4 flex-shrink-0">
+        <div className="flex items-start justify-between px-8 pt-4 pb-4 flex-shrink-0">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold text-foreground">
+              <h1 className="text-lg font-medium text-foreground leading-tight">
                 Gestão de Casos
               </h1>
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button>
-                      <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                    <button aria-label="Ajuda">
+                      <HelpCircle className="w-[18px] h-[18px] fill-[#1E88E5] text-white" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="right">
@@ -492,126 +496,124 @@ export default function CasosManagementPage() {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground">
               Gerencie e acompanhe todos os casos de atendimento
             </p>
           </div>
 
           {/* Workspace selector */}
-          <button className="flex items-center gap-2 text-sm text-foreground border border-border rounded-lg px-3 py-2 hover:bg-muted transition-colors">
+          <button className="flex items-center gap-6 text-xs text-foreground border border-border rounded px-2.5 h-9 hover:bg-muted transition-colors">
             Space Bank SAC
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
         </div>
 
-        {/* ── Body ────────────────────────────────────────────────────────── */}
-        <div className="flex-1 overflow-hidden flex flex-col px-6 py-4 gap-3 min-h-0">
-          {/* ── Toolbar ─────────────────────────────────────────────────── */}
-          <div className="flex flex-col gap-2.5 flex-shrink-0">
-            {/* Linha 1: contagem + busca */}
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                <FileText className="w-4 h-4 text-muted-foreground" />
-                Casos
-                <span className="text-muted-foreground font-normal">
-                  {filteredCasos.length}
-                </span>
-              </div>
+        {/* ── Body: card único (toolbar + tabela), como em produção ──────── */}
+        <div className="flex-1 overflow-hidden flex flex-col px-8 pb-4 min-h-0">
+          <div className="flex-1 flex flex-col min-h-0 bg-background border border-border rounded-lg overflow-hidden">
+            {/* ── Toolbar ─────────────────────────────────────────────── */}
+            <div className="flex flex-col gap-3 px-3 pt-3 pb-3 flex-shrink-0">
+              {/* Linha 1: contagem + busca */}
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  Casos
+                  <span className="w-px h-4 bg-border" />
+                  <FileText className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground font-normal">
+                    {filteredCasos.length}
+                  </span>
+                </div>
 
-              <div className="flex items-center gap-2">
-                <SearchInput
-                  placeholder="Busque por Casos..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setPage(1);
-                  }}
-                  showIcon
-                  className="w-52"
-                />
-                <TooltipProvider delayDuration={200}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
-                        <Columns3 className="w-4 h-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p className="text-xs">
-                        Configurar colunas
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </div>
-
-            {/* Linha 2: filtros + ações */}
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-2 flex-wrap">
-                {/* Saved filters preset */}
-                <button className="flex items-center gap-1.5 text-xs border border-primary/40 text-primary rounded-full px-3 py-1 hover:bg-primary/5 transition-colors">
-                  <AlignJustify className="w-3 h-3" />
-                  Meus Filtros
-                  <ChevronDown className="w-3 h-3" />
-                </button>
-
-                {/* Active filter chips */}
-                {chips.map((chip) => (
-                  <div
-                    key={chip.id}
-                    className="flex items-center gap-1.5 text-xs border border-border rounded-full px-2.5 py-1 text-foreground"
-                  >
-                    <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                    <span>{chip.label}</span>
-                    <button
-                      onClick={() =>
-                        setChips((prev) =>
-                          prev.filter((c) => c.id !== chip.id),
-                        )
-                      }
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center h-8 w-56 border border-border rounded px-2 focus-within:border-primary transition-colors">
+                    <input
+                      placeholder="Busque por Casos..."
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(1);
+                      }}
+                      className="flex-1 min-w-0 bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground"
+                    />
+                    <Search className="w-4 h-4 text-foreground/70 shrink-0" />
                   </div>
-                ))}
-
-                {/* Add filter */}
-                <button className="flex items-center gap-1.5 text-xs bg-primary text-primary-foreground rounded-full px-3 py-1 hover:bg-primary/90 transition-colors">
-                  <Plus className="w-3 h-3" />
-                  Adicionar Filtro
-                  <ChevronDown className="w-3 h-3" />
-                </button>
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button className="p-1.5 rounded hover:bg-muted text-foreground/70 hover:text-foreground transition-colors">
+                          <Columns3 className="w-4 h-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p className="text-xs">Configurar colunas</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <button className="text-xs text-primary hover:underline whitespace-nowrap">
-                  Salvar Filtros
-                </button>
-                <button className="text-xs text-muted-foreground hover:text-foreground whitespace-nowrap">
-                  Limpar Todos
-                </button>
-                <Button
-                  variant="brand"
-                  size="sm"
-                  className="gap-1.5 text-xs"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  Aplicar
-                </Button>
+              {/* Linha 2: filtros + ações */}
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {/* Saved filters preset */}
+                  <button className="flex items-center gap-1.5 h-6 text-[11px] border border-primary text-foreground rounded-full px-2.5 hover:bg-primary/5 transition-colors">
+                    <SlidersHorizontal className="w-3 h-3 text-primary" />
+                    Meus Filtros
+                    <ChevronDown className="w-3 h-3 text-primary" />
+                  </button>
+
+                  {/* Active filter chips */}
+                  {chips.map((chip) => (
+                    <div
+                      key={chip.id}
+                      className="flex items-center gap-1.5 h-6 text-[11px] border border-border rounded-full pl-2 pr-1 text-foreground"
+                    >
+                      <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                      <span>{chip.label}</span>
+                      <button
+                        onClick={() =>
+                          setChips((prev) =>
+                            prev.filter((c) => c.id !== chip.id),
+                          )
+                        }
+                        aria-label={`Remover ${chip.label}`}
+                        className="hover:opacity-80"
+                      >
+                        <XCircle className="w-3.5 h-3.5 fill-muted-foreground text-background" />
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Add filter */}
+                  <button className="flex items-center gap-1.5 h-6 text-[11px] font-medium bg-[#1E88E5] text-white rounded-full px-2.5 hover:bg-[#1E88E5]/90 transition-colors">
+                    <PlusCircle className="w-3.5 h-3.5 fill-white text-[#1E88E5]" />
+                    Adicionar Filtro
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <button className="text-xs text-primary hover:underline whitespace-nowrap">
+                    Salvar Filtros
+                  </button>
+                  <button className="text-xs text-foreground hover:underline whitespace-nowrap">
+                    Limpar Todos
+                  </button>
+                  <button className="flex items-center gap-1.5 h-8 px-4 rounded bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors">
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Aplicar
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* ── Table ───────────────────────────────────────────────────── */}
-          <div className="flex-1 border border-border rounded-xl overflow-hidden flex flex-col min-h-0">
-            <div className="overflow-auto flex-1">
-              <table className="w-full text-sm border-collapse min-w-[900px]">
+            {/* ── Table ───────────────────────────────────────────────── */}
+            <div className="overflow-auto flex-1 min-h-0">
+              <table className="w-full border-collapse min-w-[1000px] text-[13px]">
                 {/* Head */}
-                <thead className="sticky top-0 z-10">
-                  <tr className="bg-muted border-b border-border">
-                    <th className="w-10 px-3 py-3 text-left">
+                <thead className="sticky top-0 z-10 bg-background">
+                  <tr className="border-b border-border">
+                    <th className="w-10 px-3 py-2.5 text-left">
                       <input
                         type="checkbox"
                         checked={allSelected}
@@ -621,57 +623,21 @@ export default function CasosManagementPage() {
                               someSelected && !allSelected;
                         }}
                         onChange={toggleAll}
-                        className="rounded border-border accent-primary"
+                        className="w-4 h-4 rounded-sm border-border accent-primary"
                       />
                     </th>
 
                     {(
                       [
-                        {
-                          key: "id",
-                          label: "ID do Caso",
-                          sortable: true,
-                        },
-                        {
-                          key: "tipo",
-                          label: "Tipo de Caso",
-                          sortable: true,
-                        },
-                        {
-                          key: "pessoa",
-                          label: "Pessoa",
-                          sortable: true,
-                        },
-                        {
-                          key: "sla",
-                          label: "Indicador de SLA",
-                          sortable: true,
-                        },
-                        {
-                          key: null,
-                          label: "Lista de Casos",
-                          sortable: false,
-                        },
-                        {
-                          key: null,
-                          label: "Atribuído à",
-                          sortable: false,
-                        },
-                        {
-                          key: "atualizado",
-                          label: "Data de Atualização",
-                          sortable: true,
-                        },
-                        {
-                          key: null,
-                          label: "Interações",
-                          sortable: false,
-                        },
-                        {
-                          key: "status",
-                          label: "Status",
-                          sortable: true,
-                        },
+                        { key: "id", label: "ID do Caso", sortable: true },
+                        { key: "tipo", label: "Tipo de Caso", sortable: true },
+                        { key: "pessoa", label: "Pessoa", sortable: true },
+                        { key: "sla", label: "Indicador de SLA", sortable: true },
+                        { key: null, label: "Lista de Casos", sortable: false },
+                        { key: null, label: "Atribuído à", sortable: false },
+                        { key: "atualizado", label: "Data de Atualização", sortable: true },
+                        { key: null, label: "Interações", sortable: false },
+                        { key: "status", label: "Status", sortable: true },
                       ] as {
                         key: SortKey | null;
                         label: string;
@@ -680,19 +646,22 @@ export default function CasosManagementPage() {
                     ).map(({ key, label, sortable }) => (
                       <th
                         key={label}
-                        className={`px-3 py-3 text-left font-medium text-muted-foreground text-xs whitespace-nowrap ${sortable ? "cursor-pointer select-none hover:text-foreground" : ""}`}
-                        onClick={() =>
-                          sortable && key && handleSort(key)
-                        }
+                        className={`group/th px-3 py-2.5 text-left font-medium text-foreground whitespace-nowrap ${sortable ? "cursor-pointer select-none" : ""}`}
+                        onClick={() => sortable && key && handleSort(key)}
                       >
                         <span className="flex items-center">
                           {label}
+                          {/* Ordenação discreta: só aparece na coluna ativa ou no hover */}
                           {sortable && key && (
-                            <SortIcon
-                              col={key}
-                              sortKey={sortKey}
-                              sortDir={sortDir}
-                            />
+                            <span
+                              className={
+                                sortKey === key
+                                  ? ""
+                                  : "opacity-0 group-hover/th:opacity-100 transition-opacity"
+                              }
+                            >
+                              <SortIcon col={key} sortKey={sortKey} sortDir={sortDir} />
+                            </span>
                           )}
                         </span>
                       </th>
@@ -700,15 +669,12 @@ export default function CasosManagementPage() {
                   </tr>
                 </thead>
 
-                {/* Body */}
-                <tbody className="bg-card divide-y divide-border">
-                  {pagedCasos.map((u) => {
+                {/* Body — linhas zebradas, como em produção */}
+                <tbody>
+                  {pagedCasos.map((u, rowIndex) => {
                     const tipo = getTipoCaso(u.channel);
                     const sla = getSlaDisplay(u.sla, u.id);
-                    const lista = getListaCasos(
-                      u.channel,
-                      u.tags,
-                    );
+                    const lista = getListaCasos(u.channel, u.tags);
                     const dataStr = formatDataAtualizacao(u.id);
                     const interacoes = interacoesMap[u.id] ?? 0;
                     const isSel = selectedIds.has(u.id);
@@ -716,182 +682,139 @@ export default function CasosManagementPage() {
                     return (
                       <tr
                         key={u.id}
-                        className={`group transition-colors cursor-pointer ${isSel ? "bg-primary/5" : "hover:bg-accent/60"}`}
+                        className={`group border-b border-border/60 transition-colors cursor-pointer ${
+                          isSel
+                            ? "bg-primary/10"
+                            : rowIndex % 2 === 0
+                              ? "bg-muted/70 hover:bg-accent"
+                              : "bg-background hover:bg-accent"
+                        }`}
                         onClick={() => toggleRow(u.id)}
                       >
                         {/* Checkbox */}
                         <td
-                          className="px-3 py-2.5"
+                          className="px-3 py-2"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <input
                             type="checkbox"
                             checked={isSel}
                             onChange={() => toggleRow(u.id)}
-                            className="rounded border-border accent-primary"
+                            className="w-4 h-4 rounded-sm border-border accent-primary"
                           />
                         </td>
 
-                        {/* ID do Caso */}
-                        <td className="px-3 py-2.5">
+                        {/* ID do Caso — sublinhado, com as ações de visualizar e abrir em nova aba */}
+                        <td className="px-3 py-2">
                           <div
-                            className="flex items-center gap-1.5"
+                            className="flex items-center gap-1"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <TooltipProvider
-                              delayDuration={300}
-                            >
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    onClick={() =>
-                                      openPreview(u)
-                                    }
-                                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors flex-shrink-0"
-                                  >
-                                    <Eye className="w-3.5 h-3.5" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom">
-                                  <p className="text-xs">
-                                    Visualizar atendimento
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            <TooltipProvider
-                              delayDuration={300}
-                            >
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    onClick={() => openCaseInNewTab(u.id)}
-                                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors flex-shrink-0"
-                                  >
-                                    <ExternalLink className="w-3.5 h-3.5" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="bottom">
-                                  <p className="text-xs">
-                                    Abrir em nova aba
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
                             <button
                               onClick={() => openCaseInNewTab(u.id)}
                               title="Abrir detalhamento do caso em nova aba"
-                              className="text-primary hover:underline font-medium text-xs tabular-nums"
+                              className="text-foreground underline underline-offset-2 hover:text-primary tabular-nums"
                             >
                               {u.id}
+                            </button>
+                            <button
+                              onClick={() => openPreview(u)}
+                              title="Visualizar atendimento"
+                              className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => openCaseInNewTab(u.id)}
+                              title="Abrir em nova aba"
+                              className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </td>
 
                         {/* Tipo de Caso */}
-                        <td className="px-3 py-2.5">
-                          <Badge
-                            variant={tipo.variant as any}
-                            size="sm"
-                            shape="rounded"
+                        <td className="px-3 py-2">
+                          <span
+                            className={`inline-block rounded-sm px-1.5 py-0.5 whitespace-nowrap ${TIPO_CASO_CLASSES[tipo.variant]}`}
                           >
                             {tipo.label}
-                          </Badge>
+                          </span>
                         </td>
 
                         {/* Pessoa */}
-                        <td className="px-3 py-2.5">
-                          <span className="inline-block text-xs text-foreground bg-muted border border-border rounded-md px-2 py-0.5 max-w-[160px] truncate">
+                        <td className="px-3 py-2">
+                          <span className="inline-block rounded-sm px-1.5 py-0.5 bg-muted text-muted-foreground max-w-[200px] truncate align-middle">
                             {u.nome}
                           </span>
                         </td>
 
                         {/* Indicador de SLA */}
-                        <td className="px-3 py-2.5">
-                          <div className="flex items-center gap-1.5">
+                        <td className="px-3 py-2">
+                          <span
+                            className={`inline-flex items-center gap-1 rounded px-1 py-0.5 text-[11px] tabular-nums ${
+                              sla.type === "ok"
+                                ? "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400"
+                                : sla.type === "breach"
+                                  ? "bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400"
+                                  : sla.type === "risk"
+                                    ? "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+                                    : "bg-muted text-muted-foreground"
+                            }`}
+                          >
                             {sla.type === "ok" && (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-success flex-shrink-0" />
+                              <CheckCircle2 className="w-3.5 h-3.5 fill-green-600 text-white dark:text-green-950" />
                             )}
                             {sla.type === "breach" && (
-                              <XCircle className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
+                              <XCircle className="w-3.5 h-3.5 fill-red-600 text-white dark:text-red-950" />
                             )}
                             {sla.type === "risk" && (
-                              <AlertTriangle className="w-3.5 h-3.5 text-warning flex-shrink-0" />
+                              <AlertTriangle className="w-3.5 h-3.5 fill-amber-500 text-white dark:text-amber-950" />
                             )}
-                            <span
-                              className={`text-xs font-medium tabular-nums ${
-                                sla.type === "ok"
-                                  ? "text-success"
-                                  : sla.type === "breach"
-                                    ? "text-destructive"
-                                    : sla.type === "risk"
-                                      ? "text-warning"
-                                      : "text-muted-foreground"
-                              }`}
-                            >
-                              {sla.text}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Lista de Casos */}
-                        <td className="px-3 py-2.5">
-                          <span className="text-xs text-foreground">
-                            {lista || (
-                              <span className="text-muted-foreground">
-                                —
-                              </span>
-                            )}
+                            {sla.text}
                           </span>
                         </td>
 
+                        {/* Lista de Casos */}
+                        <td className="px-3 py-2 text-foreground/90">
+                          {lista}
+                        </td>
+
                         {/* Atribuído à */}
-                        <td className="px-3 py-2.5">
-                          {u.atendente ? (
-                            <span className="inline-block text-xs bg-muted border border-border rounded-md px-2 py-0.5 max-w-[130px] truncate">
+                        <td className="px-3 py-2">
+                          {u.atendente && (
+                            <span className="inline-block rounded-sm px-1.5 py-0.5 bg-muted text-muted-foreground max-w-[170px] truncate align-middle">
                               {u.atendente.nome}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">
-                              —
                             </span>
                           )}
                         </td>
 
                         {/* Data de Atualização */}
-                        <td className="px-3 py-2.5">
-                          <span className="text-xs text-muted-foreground whitespace-nowrap">
-                            {dataStr}
-                          </span>
+                        <td className="px-3 py-2 text-foreground/90 whitespace-nowrap">
+                          {dataStr}
                         </td>
 
                         {/* Interações */}
-                        <td className="px-3 py-2.5">
+                        <td className="px-3 py-2">
                           {interacoes > 0 ? (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted border border-border rounded-md px-2 py-0.5 w-fit">
-                              <ChannelIcon
-                                channel={u.channel}
-                                className="w-3 h-3"
-                              />
-                              <span className="font-medium">
-                                {interacoes}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">
-                              —
+                            <span className="inline-flex items-center gap-1.5 rounded px-1.5 py-0.5 bg-muted text-[11px] text-muted-foreground">
+                              <ChannelIcon channel={u.channel} className="w-3 h-3 text-foreground/80" />
+                              {interacoes}
                             </span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
                           )}
                         </td>
 
                         {/* Status */}
-                        <td className="px-3 py-2.5">
+                        <td className="px-3 py-2">
                           {u.isEmCurso ? (
-                            <span className="text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2.5 py-0.5 whitespace-nowrap dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-400">
+                            <span className="inline-block rounded-sm px-1.5 py-0.5 text-[11px] whitespace-nowrap bg-cyan-50 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300">
                               Em Atendimento
                             </span>
                           ) : (
-                            <span className="text-xs font-medium text-orange-600 bg-orange-50 border border-orange-200 rounded-full px-2.5 py-0.5 whitespace-nowrap dark:bg-orange-950/30 dark:border-orange-800 dark:text-orange-400">
+                            <span className="inline-block rounded-sm px-1.5 py-0.5 text-[11px] whitespace-nowrap bg-orange-50 text-orange-600 dark:bg-orange-950/40 dark:text-orange-300">
                               Aguardando Atendimento
                             </span>
                           )}
@@ -906,8 +829,7 @@ export default function CasosManagementPage() {
                         colSpan={10}
                         className="px-4 py-16 text-center text-muted-foreground text-sm"
                       >
-                        Nenhum caso encontrado para os filtros
-                        aplicados.
+                        Nenhum caso encontrado para os filtros aplicados.
                       </td>
                     </tr>
                   )}
@@ -915,23 +837,18 @@ export default function CasosManagementPage() {
               </table>
             </div>
 
-            {/* ── Pagination ──────────────────────────────────────────────── */}
+            {/* ── Pagination ──────────────────────────────────────────── */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30 flex-shrink-0">
+              <div className="flex items-center justify-between px-4 py-2.5 border-t border-border flex-shrink-0">
                 <span className="text-xs text-muted-foreground">
                   {(page - 1) * PAGE_SIZE + 1}–
-                  {Math.min(
-                    page * PAGE_SIZE,
-                    filteredCasos.length,
-                  )}{" "}
-                  de {filteredCasos.length} casos
+                  {Math.min(page * PAGE_SIZE, filteredCasos.length)} de{" "}
+                  {filteredCasos.length}
                 </span>
 
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={() =>
-                      setPage((p) => Math.max(1, p - 1))
-                    }
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
                     className="p-1.5 rounded hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-muted-foreground hover:text-foreground transition-colors"
                   >
@@ -940,17 +857,14 @@ export default function CasosManagementPage() {
 
                   {pageNumbers.map((p, idx) => (
                     <Fragment key={p}>
-                      {idx > 0 &&
-                        pageNumbers[idx - 1] !== p - 1 && (
-                          <span className="px-1 text-muted-foreground text-xs">
-                            …
-                          </span>
-                        )}
+                      {idx > 0 && pageNumbers[idx - 1] !== p - 1 && (
+                        <span className="px-1 text-muted-foreground text-xs">…</span>
+                      )}
                       <button
                         onClick={() => setPage(p)}
-                        className={`min-w-[28px] h-7 px-2 rounded text-xs font-medium transition-colors ${
+                        className={`min-w-[28px] h-7 px-2 rounded text-xs transition-colors ${
                           p === page
-                            ? "bg-primary text-primary-foreground"
+                            ? "bg-primary text-primary-foreground font-medium"
                             : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         }`}
                       >
@@ -960,11 +874,7 @@ export default function CasosManagementPage() {
                   ))}
 
                   <button
-                    onClick={() =>
-                      setPage((p) =>
-                        Math.min(totalPages, p + 1),
-                      )
-                    }
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
                     className="p-1.5 rounded hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-muted-foreground hover:text-foreground transition-colors"
                   >

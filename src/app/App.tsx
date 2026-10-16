@@ -18,6 +18,7 @@ import GlobalRightPanel from "./components/GlobalRightPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Toaster } from "sonner";
 import { CollabProvider } from "./contexts/CollabContext";
+import { CaseModalProvider } from "./contexts/CaseModalContext";
 import CollabPanel from "./components/collab/CollabPanel";
 import { usePreferences } from "./contexts/PreferencesContext";
 
@@ -90,7 +91,9 @@ export default function App() {
             <SidePanelProvider>
               <DataProvider>
                 <CollabProvider>
-                  <Layout />
+                  <CaseModalProvider>
+                    <Layout />
+                  </CaseModalProvider>
                 </CollabProvider>
               </DataProvider>
             </SidePanelProvider>

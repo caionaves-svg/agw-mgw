@@ -6,7 +6,6 @@ import {
   MapPin,
   Copy,
   Check,
-  ExternalLink,
   Pencil,
   Plus,
   Trash2,
@@ -33,7 +32,7 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { openCaseInNewTab } from "../CaseIdBadge";
+import { useCaseModal } from "../../contexts/CaseModalContext";
 import { ChangeContactDialog } from "../atendimentos/ChangeContactDialog";
 
 // ── KPI sub-components (only rendered in modal context) ──────────────
@@ -93,6 +92,7 @@ function AssigneeCard({
 
 interface InformationSectionProps {
   atendimento?: {
+    id?: string;
     cliente: {
       nome: string;
     };
@@ -264,6 +264,7 @@ export function InformationSection({
   onClose,
   showKpis = false,
 }: InformationSectionProps) {
+  const { openCaseModal } = useCaseModal();
 
   // Estado para controlar quais seções estão abertas (sempre abertas por padrão)
   const [openSections, setOpenSections] = useState<string[]>([
@@ -696,11 +697,17 @@ export function InformationSection({
                     ID do Caso
                   </span>
                   <div className="group relative flex items-center gap-2 bg-gray-50 hover:bg-gray-100 rounded-lg px-1 py-1 transition-all border border-transparent hover:border-brand-primary/20 cursor-pointer">
-                    <span className="font-normal text-gray-700 text-sm font-mono flex-1">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openCaseModal(atendimento?.id ?? "098765", atendimento?.cliente.nome)
+                      }
+                      title="Ver dados do caso"
+                      className="font-normal text-gray-700 text-sm font-mono flex-1 text-left hover:text-primary transition-colors"
+                    >
                       {atendimento?.id ?? "098765"}
-                    </span>
+                    </button>
 
-                    {/* Botões de ação - depois do número: copiar, depois abrir */}
                     <div className="flex items-center gap-1">
                       {/* Botão copiar */}
                       <button
@@ -711,15 +718,6 @@ export function InformationSection({
                         title="Copiar"
                       >
                         <Copy className="w-3.5 h-3.5 text-muted-foreground" />
-                      </button>
-
-                      {/* Botão abrir caso */}
-                      <button
-                        onClick={() => openCaseInNewTab(atendimento?.id ?? "098765")}
-                        className="p-1.5 rounded-md hover:bg-gray-200 transition-colors"
-                        title="Abrir detalhamento do caso em nova aba"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
                       </button>
                     </div>
                   </div>

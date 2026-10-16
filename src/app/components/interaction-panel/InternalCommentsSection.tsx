@@ -12,7 +12,8 @@ import CommentThread, {
 import "../comments/comments.css";
 
 interface InternalCommentsSectionProps {
-  onClose: () => void;
+  /** Sem onClose, o botão de fechar não é exibido (ex.: aba da modal do caso) */
+  onClose?: () => void;
   /** Atendimento/caso a que os comentários pertencem */
   atendimento?: { id: string; cliente?: { nome: string } } | null;
 }
@@ -142,9 +143,11 @@ export function InternalCommentsSection({
           casoId={atendimento?.id}
           clienteNome={atendimento?.cliente?.nome}
         />
-        <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0 shrink-0">
-          <X className="w-4 h-4" />
-        </Button>
+        {onClose && (
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0 shrink-0">
+            <X className="w-4 h-4" />
+          </Button>
+        )}
       </div>
 
       {/* Fio de comentários */}

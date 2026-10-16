@@ -218,7 +218,7 @@ export function ContactItem({
             >
               {contato.nome}
             </span>
-            <CaseIdBadge casoId={contato.id} />
+            <CaseIdBadge casoId={contato.id} clienteNome={contato.nome} />
           </h3>
           <div className="flex items-center gap-2">
             <TooltipProvider delayDuration={200}>

@@ -261,7 +261,7 @@ function MentionItem({ mention, now }: { mention: CollabMention; now: number }) 
       user={autor}
       title="Ver conversa do caso"
       onClick={() => openMention(mention.id)}
-      badge={<CaseIdBadge casoId={mention.casoId} />}
+      badge={<CaseIdBadge casoId={mention.casoId} clienteNome={mention.clienteNome} />}
       time={tempoRelativo(mention.createdAt, now)}
       unread={mention.lida ? 0 : 1}
       previewMuted={mention.lida}

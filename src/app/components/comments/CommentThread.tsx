@@ -87,7 +87,7 @@ export function CaseCommentsHeading({
       </h2>
       {(casoId || clienteNome) && (
         <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground min-w-0">
-          {casoId && <CaseIdBadge casoId={casoId} />}
+          {casoId && <CaseIdBadge casoId={casoId} clienteNome={clienteNome} />}
           {clienteNome && <span className="truncate">{clienteNome}</span>}
           {extra && <span className="truncate">· {extra}</span>}
         </div>

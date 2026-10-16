@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -70,10 +71,11 @@ function Layout() {
       {/* cVortex Collab - menções e conversas diretas */}
       <CollabPanel />
       <Toaster
-        position="top-right"
-        offset={72}
+        position="bottom-left"
+        offset={24}
         theme={theme === "dark" ? "dark" : theme === "light" ? "light" : "system"}
-        closeButton
+        expand={false}
+        style={{ "--width": "400px" } as CSSProperties}
       />
     </div>
   );

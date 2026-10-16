@@ -7,7 +7,7 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { toast } from "sonner";
+import { notify } from "../components/ui/toast";
 import { useLocation } from "react-router";
 import { useSidePanel } from "./SidePanelContext";
 import { findPlatformUser } from "../data/platformUsers";
@@ -302,7 +302,9 @@ export function CollabProvider({ children }: { children: ReactNode }) {
     }));
     if (!visible) {
       const user = findPlatformUser(userId);
-      toast(`${user?.nome ?? "Nova mensagem"}`, {
+      notify({
+        title: user?.nome ?? "Nova mensagem",
+        variant: "info",
         description: html.length > 80 ? html.slice(0, 80) + "…" : html,
         action: { label: "Abrir", onClick: () => openConversation(userId) },
       });
@@ -380,7 +382,9 @@ export function CollabProvider({ children }: { children: ReactNode }) {
         thread: [...m.thread, { id: uid(), from: autorId, respondendoA, html: `<p>${html}</p>`, createdAt: Date.now() }],
       }));
       if (!visible) {
-        toast(`${user.nome} respondeu no caso`, {
+        notify({
+          title: `${user.nome} respondeu no caso`,
+          variant: "info",
           description: html,
           action: { label: "Ver", onClick: () => openMention(id) },
         });
@@ -406,7 +410,9 @@ export function CollabProvider({ children }: { children: ReactNode }) {
       setMentions((prev) => [mention, ...prev]);
       const { isOpen } = visibleRef.current;
       if (!isOpen) {
-        toast("Juliana Mendes mencionou você", {
+        notify({
+          title: "Juliana Mendes mencionou você",
+          variant: "info",
           description: "Caso 923647 · Beatriz Fernandes",
           action: { label: "Ver", onClick: () => openMention(mention.id) },
         });

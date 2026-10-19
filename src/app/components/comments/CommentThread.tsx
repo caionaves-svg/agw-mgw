@@ -83,7 +83,7 @@ export function CaseCommentsHeading({
   return (
     <div className="min-w-0">
       <h2 className="text-base font-medium text-foreground leading-tight">
-        Comentários internos
+        Comentários do caso
       </h2>
       {(casoId || clienteNome) && (
         <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground min-w-0">

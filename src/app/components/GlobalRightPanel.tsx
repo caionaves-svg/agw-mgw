@@ -49,7 +49,7 @@ export default function GlobalRightPanel() {
   // Seções disponíveis para o InteractionPanel
   const sections = [
     { id: "info",              icon: Info,          title: "Informações" },
-    { id: "comentarios",       icon: MessageSquare, title: "Comentários internos" },
+    { id: "comentarios",       icon: MessageSquare, title: "Comentários do caso" },
     { id: "anexos",            icon: Paperclip,     title: "Anexos" },
     { id: "historico-casos",   icon: ClipboardList, title: "Histórico de Casos" },
     { id: "historico-cliente", icon: History,       title: "Histórico do Cliente" },

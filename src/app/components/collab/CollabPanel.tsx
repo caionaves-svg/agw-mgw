@@ -333,7 +333,6 @@ function DirectsTab() {
     <div className="flex-1 overflow-y-auto custom-scrollbar">
       <div className="px-4 pb-1">
         <Button
-          variant="outline"
           onClick={() => setView({ type: "new" })}
           className="w-full"
         >
@@ -746,14 +745,14 @@ export default function CollabPanel() {
     <>
       {/* Overlay — abaixo do header, para o botão do Collab continuar acessível */}
       <div
-        className="fixed top-16 inset-x-0 bottom-0 z-40 bg-black/45 animate-in fade-in duration-200"
+        className="fixed inset-0 z-50 bg-black/45 animate-in fade-in duration-200"
         onClick={close}
         aria-hidden="true"
       />
       <aside
         role="dialog"
         aria-modal="true"
-        className="fixed top-16 rounded-l-lg right-0 bottom-0 z-40 w-120 max-w-full flex flex-col bg-background border-l border-border shadow-lg animate-in slide-in-from-right duration-200"
+        className="fixed inset-y-0 right-0 rounded-l-lg z-50 w-120 max-w-full flex flex-col bg-background border-l border-border shadow-lg animate-in slide-in-from-right duration-200"
         aria-label="cVortex Collab"
       >
         <CollabContent />

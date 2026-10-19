@@ -20,7 +20,7 @@ import {
   Bold,
   Italic,
   Strikethrough,
-  Code,
+  Underline,
   Mic,
   Trash2,
   Pause,
@@ -239,6 +239,7 @@ export default function CommentInput({
     extensions: [
       StarterKit.configure({
         heading: false,
+        code: false,
         codeBlock: false,
         blockquote: false,
         horizontalRule: false,
@@ -506,18 +507,18 @@ export default function CommentInput({
                 <Italic className="w-3.5 h-3.5" />
               </FormatButton>
               <FormatButton
+                title="Sublinhado (Ctrl+U)"
+                active={editor.isActive("underline")}
+                onClick={() => editor.chain().focus().toggleUnderline().run()}
+              >
+                <Underline className="w-3.5 h-3.5" />
+              </FormatButton>
+              <FormatButton
                 title="Tachado (Ctrl+Shift+S)"
                 active={editor.isActive("strike")}
                 onClick={() => editor.chain().focus().toggleStrike().run()}
               >
                 <Strikethrough className="w-3.5 h-3.5" />
-              </FormatButton>
-              <FormatButton
-                title="Código (Ctrl+E)"
-                active={editor.isActive("code")}
-                onClick={() => editor.chain().focus().toggleCode().run()}
-              >
-                <Code className="w-3.5 h-3.5" />
               </FormatButton>
             </BubbleMenu>
           )}

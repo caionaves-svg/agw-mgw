@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Upload, X, Paperclip, Star, HelpCircle } from "lucide-react";
+import { Upload, X, Paperclip, Star } from "lucide-react";
 import { InternalCommentsSection } from "./interaction-panel/InternalCommentsSection";
 
 /**
@@ -18,7 +18,7 @@ const TABS = [
   "SLA",
   "Anexo",
   "Avaliação",
-  "Comentários",
+  "Collab",
 ] as const;
 type Tab = (typeof TABS)[number];
 
@@ -247,7 +247,7 @@ export default function LegacyCaseModal({ casoId, clienteNome, onClose }: Legacy
         </Panel>
       </div>
     ),
-    Comentários: (
+    Collab: (
       <div className="h-full min-h-[420px]">
         <InternalCommentsSection atendimento={{ id: casoId, cliente: { nome: caso.nome } }} />
       </div>
@@ -264,12 +264,9 @@ export default function LegacyCaseModal({ casoId, clienteNome, onClose }: Legacy
         >
           {/* Header */}
           <div className="flex items-start justify-between gap-4 px-6 pt-5">
-            <div className="flex items-start gap-3">
-              <DialogPrimitive.Title className="pt-5 text-xl text-foreground">
-                Dados do Caso - {casoId}
-              </DialogPrimitive.Title>
-              <HelpCircle className="size-5 shrink-0 text-primary" />
-            </div>
+            <DialogPrimitive.Title className="pt-5 text-xl text-foreground">
+              Dados do Caso - {casoId}
+            </DialogPrimitive.Title>
             <div className="flex items-center gap-3 pt-3">
               <button
                 type="button"

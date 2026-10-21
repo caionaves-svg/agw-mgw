@@ -3,10 +3,11 @@ import { AtendimentosHeader } from "./AtendimentosHeader";
 import { SectionLabel } from "./SectionLabel";
 import { Usuario, useData } from "../../contexts/DataContext";
 import { useState, useMemo, useEffect } from "react";
-import { Resizable } from "re-resizable";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { FilterPanel, FilterValues } from "./FilterPanel";
 import { NewAtendimentoPanel } from "./NewAtendimentoPanel";
 import { AtendimentosRail, RAIL_WIDTH } from "./AtendimentosRail";
+import { useSidebarResize } from "./useSidebarResize";
 
 // Largura da lista expandida (redimensionável pela borda direita)
 const DEFAULT_WIDTH = 392;
@@ -103,7 +104,6 @@ export function AtendimentosSidebar({
 
   // Lista recolhida (só ícones/avatares) e largura escolhida — lembradas entre sessões
   const [layout, setLayout] = useState(loadLayout);
-  const [isResizing, setIsResizing] = useState(false);
   const { width, collapsed } = layout;
 
   useEffect(() => {
@@ -115,6 +115,18 @@ export function AtendimentosSidebar({
   }, [layout]);
 
   const setCollapsed = (value: boolean) => setLayout((l) => ({ ...l, collapsed: value }));
+
+  // Arrastar a borda: redimensiona; abaixo do mínimo, recolhe ao soltar
+  const { displayWidth, isDragging, intent, progress, handleProps } = useSidebarResize({
+    width,
+    collapsed,
+    min: MIN_WIDTH,
+    max: MAX_WIDTH,
+    railWidth: RAIL_WIDTH,
+    defaultWidth: DEFAULT_WIDTH,
+    onWidthChange: (w) => setLayout((l) => ({ ...l, width: w })),
+    onCollapsedChange: setCollapsed,
+  });
 
   // Ações da lista recolhida que precisam do espaço completo: expande antes
   const expandAnd = (action?: () => void) => {
@@ -201,188 +213,222 @@ export function AtendimentosSidebar({
   const aguardandoSorted = sortedContacts.filter((c) => !c.isEmCurso);
 
   return (
-    <Resizable
-      size={{ width: collapsed ? RAIL_WIDTH : width, height: "100%" }}
-      minWidth={collapsed ? RAIL_WIDTH : MIN_WIDTH}
-      maxWidth={collapsed ? RAIL_WIDTH : MAX_WIDTH}
-      enable={{ right: !collapsed }}
-      onResizeStart={() => setIsResizing(true)}
-      onResizeStop={(_e, _dir, _ref, d) => {
-        setIsResizing(false);
-        setLayout((l) => ({ ...l, width: l.width + d.width }));
-      }}
-      handleStyles={{ right: { width: "4px", right: "0", cursor: "col-resize" } }}
-      handleClasses={{ right: "transition-colors hover:bg-brand-primary/20 active:bg-brand-primary/30" }}
-      handleComponent={{
-        right: (
-          <div
-            className="h-full w-full"
-            title="Arraste para redimensionar · duplo clique para restaurar"
-            onDoubleClick={() => setLayout((l) => ({ ...l, width: DEFAULT_WIDTH }))}
-          />
-        ),
-      }}
-      className={`bg-background border-r border-border overflow-hidden flex-shrink-0 ${
-        isResizing ? "" : "transition-[width] duration-200 ease-in-out"
+    <div
+      style={{ width: displayWidth }}
+      className={`relative h-full bg-background border-r border-border flex-shrink-0 ${
+        isDragging
+          ? ""
+          : "transition-[width] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
       }`}
     >
-      {collapsed ? (
-        <AtendimentosRail
-          sections={[
-            { id: "em-atendimento", label: "Em Atendimento", contacts: sortWithPins(emAtendimentoSorted) },
-            { id: "backlog", label: "Backlog", contacts: sortWithPins(aguardandoSorted) },
-          ]}
-          selectedId={selectedContact?.id}
-          pinnedIds={pinnedIds}
-          activeFiltersCount={activeFiltersCount}
-          onExpand={() => expandAnd()}
-          onNewAtendimento={() =>
-            expandAnd(showNewAtendimentoPanel ? undefined : handleToggleNewAtendimentoPanel)
-          }
-          onOpenFilters={() =>
-            expandAnd(showFilterPanel ? undefined : handleToggleFilterPanel)
-          }
-          onContactClick={onContactClick}
-        />
-      ) : (
-        <div className="h-full flex flex-col">
-          {/* Header */}
-          <AtendimentosHeader
-            onCollapse={() => setCollapsed(true)}
-            searchTerm={searchTerm}
-            onSearchChange={onSearchChange}
-            filterOpen={filterOpen}
-            onFilterToggle={onFilterToggle}
-            selectedFilter={selectedFilter}
-            filters={filters}
-            onFilterSelect={onFilterSelect}
-            onNewAtendimento={handleToggleNewAtendimentoPanel}
-            sortOrder={sortOrder}
-            onSortToggle={handleSortToggle}
-            onAdvancedFilterToggle={handleToggleFilterPanel}
-            activeFiltersCount={activeFiltersCount}
-            isFilterPanelOpen={showFilterPanel}
-            activeFilters={activeFilters}
-            onClearFilters={handleClearFilters}
-            filterCounts={{
-              todos: allContacts.length,
-              "nao-lidos": naoLidosCount,
-              "nao-respondido": naoRespondidoCount,
-              aguardando: aguardandoAtendimento.length,
-              "em-atendimento": emAtendimentoAgora.length,
-            }}
-            pinnedCount={pinnedIds.size}
-          />
+      {/* Conteúdo: largura própria para ser "coberto" (e não espremido) ao arrastar */}
+      <div
+        className="h-full overflow-hidden transition-opacity duration-150"
+        style={{ opacity: intent ? 0.35 : 1 - progress * 0.4 }}
+      >
+        <div
+          className="h-full"
+          style={{ width: collapsed ? RAIL_WIDTH : Math.max(displayWidth, MIN_WIDTH) }}
+        >
+          {collapsed ? (
+            <AtendimentosRail
+              sections={[
+                { id: "em-atendimento", label: "Em Atendimento", contacts: sortWithPins(emAtendimentoSorted) },
+                { id: "backlog", label: "Backlog", contacts: sortWithPins(aguardandoSorted) },
+              ]}
+              selectedId={selectedContact?.id}
+              pinnedIds={pinnedIds}
+              activeFiltersCount={activeFiltersCount}
+              onExpand={() => expandAnd()}
+              onNewAtendimento={() =>
+                expandAnd(showNewAtendimentoPanel ? undefined : handleToggleNewAtendimentoPanel)
+              }
+              onOpenFilters={() =>
+                expandAnd(showFilterPanel ? undefined : handleToggleFilterPanel)
+              }
+              onContactClick={onContactClick}
+            />
+          ) : (
+            <div className="h-full flex flex-col">
+              {/* Header */}
+              <AtendimentosHeader
+                onCollapse={() => setCollapsed(true)}
+                searchTerm={searchTerm}
+                onSearchChange={onSearchChange}
+                filterOpen={filterOpen}
+                onFilterToggle={onFilterToggle}
+                selectedFilter={selectedFilter}
+                filters={filters}
+                onFilterSelect={onFilterSelect}
+                onNewAtendimento={handleToggleNewAtendimentoPanel}
+                sortOrder={sortOrder}
+                onSortToggle={handleSortToggle}
+                onAdvancedFilterToggle={handleToggleFilterPanel}
+                activeFiltersCount={activeFiltersCount}
+                isFilterPanelOpen={showFilterPanel}
+                activeFilters={activeFilters}
+                onClearFilters={handleClearFilters}
+                filterCounts={{
+                  todos: allContacts.length,
+                  "nao-lidos": naoLidosCount,
+                  "nao-respondido": naoRespondidoCount,
+                  aguardando: aguardandoAtendimento.length,
+                  "em-atendimento": emAtendimentoAgora.length,
+                }}
+                pinnedCount={pinnedIds.size}
+              />
 
-          {/* Container com transição entre lista, filtros e novo atendimento */}
-          <div className="flex-1 relative overflow-hidden">
-            {/* Lista de atendimentos */}
-            <div
-              className={`absolute inset-0 transition-transform duration-300 ease-in-out ${
-                showFilterPanel
-                  ? "-translate-x-full"
-                  : showNewAtendimentoPanel
-                    ? "-translate-x-full"
-                    : "translate-x-0"
-              }`}
-            >
-              <div className="h-full overflow-y-auto overflow-x-hidden custom-scrollbar">
-                {/* Seção: Em Atendimento Agora */}
-                {emAtendimentoSorted.length > 0 && (
-                  <>
-                    <SectionLabel
-                      label="Em Atendimento"
-                      count={emAtendimentoSorted.length}
-                      isCollapsed={emAtendimentoCollapsed}
-                      onToggle={() =>
-                        setEmAtendimentoCollapsed(
-                          !emAtendimentoCollapsed,
-                        )
-                      }
-                    />
-                    {!emAtendimentoCollapsed &&
-                      sortWithPins(emAtendimentoSorted).map((contato) => (
-                        <ContactItem
-                          key={contato.id}
-                          contato={contato}
-                          onClick={() => onContactClick(contato)}
-                          isSelected={selectedContact?.id === contato.id}
-                          onClose={() => onContactClose(contato.id)}
-                          isEmAtendimento={true}
-                          isPinned={pinnedIds.has(contato.id)}
-                          onPin={togglePin}
+              {/* Container com transição entre lista, filtros e novo atendimento */}
+              <div className="flex-1 relative overflow-hidden">
+                {/* Lista de atendimentos */}
+                <div
+                  className={`absolute inset-0 transition-transform duration-300 ease-in-out ${
+                    showFilterPanel
+                      ? "-translate-x-full"
+                      : showNewAtendimentoPanel
+                        ? "-translate-x-full"
+                        : "translate-x-0"
+                  }`}
+                >
+                  <div className="h-full overflow-y-auto overflow-x-hidden custom-scrollbar">
+                    {/* Seção: Em Atendimento Agora */}
+                    {emAtendimentoSorted.length > 0 && (
+                      <>
+                        <SectionLabel
+                          label="Em Atendimento"
+                          count={emAtendimentoSorted.length}
+                          isCollapsed={emAtendimentoCollapsed}
+                          onToggle={() =>
+                            setEmAtendimentoCollapsed(
+                              !emAtendimentoCollapsed,
+                            )
+                          }
                         />
-                      ))}
-                  </>
-                )}
+                        {!emAtendimentoCollapsed &&
+                          sortWithPins(emAtendimentoSorted).map((contato) => (
+                            <ContactItem
+                              key={contato.id}
+                              contato={contato}
+                              onClick={() => onContactClick(contato)}
+                              isSelected={selectedContact?.id === contato.id}
+                              onClose={() => onContactClose(contato.id)}
+                              isEmAtendimento={true}
+                              isPinned={pinnedIds.has(contato.id)}
+                              onPin={togglePin}
+                            />
+                          ))}
+                      </>
+                    )}
 
-                {/* Seção: Aguardando Atendimento */}
-                {aguardandoSorted.length > 0 && (
-                  <>
-                    <SectionLabel
-                      label="Backlog"
-                      count={aguardandoSorted.length}
-                      isCollapsed={aguardandoCollapsed}
-                      onToggle={() =>
-                        setAguardandoCollapsed(!aguardandoCollapsed)
-                      }
-                    />
-                    {!aguardandoCollapsed &&
-                      sortWithPins(aguardandoSorted).map((contato) => (
-                        <ContactItem
-                          key={contato.id}
-                          contato={contato}
-                          onClick={() => onContactClick(contato)}
-                          isSelected={selectedContact?.id === contato.id}
-                          onClose={() => onContactClose(contato.id)}
-                          isPinned={pinnedIds.has(contato.id)}
-                          onPin={togglePin}
+                    {/* Seção: Aguardando Atendimento */}
+                    {aguardandoSorted.length > 0 && (
+                      <>
+                        <SectionLabel
+                          label="Backlog"
+                          count={aguardandoSorted.length}
+                          isCollapsed={aguardandoCollapsed}
+                          onToggle={() =>
+                            setAguardandoCollapsed(!aguardandoCollapsed)
+                          }
                         />
-                      ))}
-                  </>
-                )}
+                        {!aguardandoCollapsed &&
+                          sortWithPins(aguardandoSorted).map((contato) => (
+                            <ContactItem
+                              key={contato.id}
+                              contato={contato}
+                              onClick={() => onContactClick(contato)}
+                              isSelected={selectedContact?.id === contato.id}
+                              onClose={() => onContactClose(contato.id)}
+                              isPinned={pinnedIds.has(contato.id)}
+                              onPin={togglePin}
+                            />
+                          ))}
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Painel de filtros */}
+                <div
+                  className={`absolute inset-0 transition-transform duration-300 ease-in-out ${
+                    showFilterPanel
+                      ? "translate-x-0"
+                      : "translate-x-full"
+                  }`}
+                >
+                  {showFilterPanel && (
+                    <FilterPanel
+                      onClose={handleCloseFilterPanel}
+                      onApply={handleApplyFilters}
+                      onClear={handleClearFilters}
+                      initialValues={activeFilters}
+                    />
+                  )}
+                </div>
+
+                {/* Painel de novo atendimento */}
+                <div
+                  className={`absolute inset-0 transition-transform duration-300 ease-in-out ${
+                    showNewAtendimentoPanel
+                      ? "translate-x-0"
+                      : "translate-x-full"
+                  }`}
+                >
+                  {showNewAtendimentoPanel && (
+                    <NewAtendimentoPanel
+                      onClose={handleCloseNewAtendimentoPanel}
+                      onSubmit={(data) => {
+                        console.log("Novo atendimento criado:", data);
+                        handleCloseNewAtendimentoPanel();
+                      }}
+                    />
+                  )}
+                </div>
               </div>
             </div>
-
-            {/* Painel de filtros */}
-            <div
-              className={`absolute inset-0 transition-transform duration-300 ease-in-out ${
-                showFilterPanel
-                  ? "translate-x-0"
-                  : "translate-x-full"
-              }`}
-            >
-              {showFilterPanel && (
-                <FilterPanel
-                  onClose={handleCloseFilterPanel}
-                  onApply={handleApplyFilters}
-                  onClear={handleClearFilters}
-                  initialValues={activeFilters}
-                />
-              )}
-            </div>
-
-            {/* Painel de novo atendimento */}
-            <div
-              className={`absolute inset-0 transition-transform duration-300 ease-in-out ${
-                showNewAtendimentoPanel
-                  ? "translate-x-0"
-                  : "translate-x-full"
-              }`}
-            >
-              {showNewAtendimentoPanel && (
-                <NewAtendimentoPanel
-                  onClose={handleCloseNewAtendimentoPanel}
-                  onSubmit={(data) => {
-                    console.log("Novo atendimento criado:", data);
-                    handleCloseNewAtendimentoPanel();
-                  }}
-                />
-              )}
-            </div>
-          </div>
+          )}
         </div>
-      )}
-    </Resizable>
+      </div>
+
+      {/* Dica ao armar: só acontece quando o usuário soltar */}
+      <div
+        aria-hidden={!intent}
+        className={`pointer-events-none absolute inset-0 flex items-center justify-center transition-all duration-200 ${
+          intent ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        }`}
+      >
+        {intent === "collapse" ? (
+          <div className="flex items-center gap-2 rounded-full bg-popover border border-border px-3 py-2 text-sm font-medium text-foreground shadow-lg">
+            <PanelLeftClose className="w-4 h-4 text-primary" />
+            Solte para recolher
+          </div>
+        ) : (
+          <div className="flex size-10 items-center justify-center rounded-full bg-popover border border-border shadow-lg">
+            <PanelLeftOpen className="w-4 h-4 text-primary" />
+          </div>
+        )}
+      </div>
+
+      {/* Alça de arraste (borda direita) */}
+      <div
+        {...handleProps}
+        title={
+          collapsed
+            ? "Arraste para expandir · duplo clique para expandir"
+            : "Arraste para redimensionar ou recolher · duplo clique para restaurar"
+        }
+        className="group/handle absolute inset-y-0 -right-1.5 z-10 w-3 cursor-col-resize outline-none"
+      >
+        <span
+          className={`absolute inset-y-0 left-1/2 -translate-x-1/2 transition-all duration-150 ${
+            intent
+              ? "w-0.5 bg-primary"
+              : isDragging
+                ? "w-0.5 bg-primary/60"
+                : "w-px bg-transparent group-hover/handle:w-0.5 group-hover/handle:bg-primary/40 group-focus-visible/handle:w-0.5 group-focus-visible/handle:bg-primary/60"
+          }`}
+        />
+      </div>
+    </div>
   );
 }

@@ -408,7 +408,7 @@ export default function AppHeader() {
   const isAgwScreen =
     location.pathname.includes("/atendimentos") ||
     location.pathname === "/" ||
-    location.pathname === "/gerenciamento";
+    location.pathname.replace(/\/+$/, "") === "/gerenciamento";
   const isAtendimento = activeItem === "atendimento";
 
   // Iniciar chamada automaticamente ao entrar em Atendimentos (Simulação)

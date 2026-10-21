@@ -214,7 +214,7 @@ export function CollabProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const sidePanel = useSidePanel();
   const placement: CollabPlacement =
-    COLLAB_NO_PAINEL && location.pathname === "/atendimentos" ? "panel" : "drawer";
+    COLLAB_NO_PAINEL && location.pathname.replace(/\/+$/, "") === "/atendimentos" ? "panel" : "drawer";
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isOpen =
     placement === "panel"

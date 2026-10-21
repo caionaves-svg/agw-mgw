@@ -19,7 +19,27 @@ interface SmartFilterRowProps {
   selectedFilter?: string;
   onFilterSelect?: (id: string) => void;
   onRemove?: (id: string) => void;
+  /** Teto de chips visíveis; abaixo disso, o que não cabe vai para o "+N" */
   maxVisible?: number;
+}
+
+// Conteúdo do chip — o mesmo no chip real e no "fantasma" usado para medir
+function ChipContent({ f, removable }: { f: FilterOption; removable: boolean }) {
+  return (
+    <>
+      {f.label}
+      {f.count !== undefined && (
+        <span className="font-bold" style={{ fontSize: "inherit" }}>
+          {f.count > 99 ? "99+" : f.count}
+        </span>
+      )}
+      {removable && (
+        <span className="rounded-sm p-0.5">
+          <X className="w-3 h-3" />
+        </span>
+      )}
+    </>
+  );
 }
 
 export function SmartFilterRow({
@@ -43,28 +63,21 @@ export function SmartFilterRow({
     const ghost = ghostRef.current;
     if (!container || !ghost) return;
 
-    if (maxVisible !== undefined) {
-      setVisibleCount(maxVisible);
-      return;
-    }
-
     const availableW = container.getBoundingClientRect().width;
     const GAP = 6;
-    const MORE_W = 56;
+    const MORE_W = 56; // botão "+N ⌄"
     const chips = Array.from(ghost.children) as HTMLElement[];
+    const limit = Math.min(maxVisible ?? chips.length, chips.length);
     let used = 0;
     let count = 0;
 
-    for (let i = 0; i < chips.length; i++) {
+    for (let i = 0; i < limit; i++) {
       const chipW = chips[i].getBoundingClientRect().width;
       const spacer = i > 0 ? GAP : 0;
-      const isLast = i === chips.length - 1;
-      const reserve = !isLast ? GAP + MORE_W : 0;
+      // Reserva espaço para o "+N" se ainda sobrar filtro depois deste
+      const reserve = i < chips.length - 1 ? GAP + MORE_W : 0;
 
-      if (
-        used + spacer + chipW + reserve <= availableW ||
-        i === 0
-      ) {
+      if (used + spacer + chipW + reserve <= availableW || i === 0) {
         used += spacer + chipW;
         count = i + 1;
       } else {
@@ -111,16 +124,21 @@ export function SmartFilterRow({
         style={{ top: -9999, left: -9999 }}
       >
         {filters.map((f) => (
-          <Button key={f.id} variant="outline" size="xs">
-            {f.label}
+          <Button
+            key={f.id}
+            variant="outline"
+            size="xs"
+            className={`gap-1.5 ${onRemove ? "pr-1.5" : ""}`}
+          >
+            <ChipContent f={f} removable={!!onRemove} />
           </Button>
         ))}
       </div>
 
-      {/* Container real */}
+      {/* Container real — ocupa a largura disponível para medir o espaço */}
       <div
         ref={containerRef}
-        className="flex gap-1.5 relative overflow-visible"
+        className="flex flex-1 min-w-0 w-full gap-1.5 relative overflow-visible"
       >
         {visible.map((f) => (
           <Button

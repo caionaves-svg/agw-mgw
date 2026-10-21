@@ -6,6 +6,7 @@ import {
   X,
   LockKeyhole,
   LockKeyholeOpen,
+  PanelLeftClose,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { SearchInput } from "../ui/search-input";
@@ -46,6 +47,8 @@ interface AtendimentosHeaderProps {
   pinnedCount?: number;
   // Prop para avisar o componente pai que o botão foi clicado (se necessário)
   onToggleFreezeSort?: () => void;
+  /** Recolhe a lista para o modo compacto (apenas ícones e avatares) */
+  onCollapse?: () => void;
 }
 
 export function AtendimentosHeader({
@@ -68,6 +71,7 @@ export function AtendimentosHeader({
   filterCounts = {},
   pinnedCount = 0,
   onToggleFreezeSort,
+  onCollapse,
 }: AtendimentosHeaderProps) {
   // 🟢 ESTADO LOCAL ADICIONADO: Controla o visual do cadeado direto aqui!
   const [isFrozen, setIsFrozen] = useState(false);
@@ -135,18 +139,37 @@ export function AtendimentosHeader({
   return (
     <div className="bg-background border-b border-border p-4">
       {/* Título + Novo atendimento */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl text-foreground">
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <h1 className="text-xl text-foreground truncate">
           Atendimentos
         </h1>
-        <Button
-          variant="brand"
-          onClick={onNewAtendimento}
-          className="text-white"
-        >
-          <Plus className="w-4 h-4 mr-1" />
-          Novo atendimento
-        </Button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            variant="brand"
+            onClick={onNewAtendimento}
+            className="text-white"
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            Novo atendimento
+          </Button>
+          {onCollapse && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={onCollapse}
+                  aria-label="Recolher lista"
+                >
+                  <PanelLeftClose className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="text-xs font-medium">Recolher lista</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">

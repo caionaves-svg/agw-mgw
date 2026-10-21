@@ -42,9 +42,9 @@ export default function GlobalRightPanel() {
   const [customWidth, setCustomWidth] = useState(464);
   const location = useLocation();
 
-  // Verifica se está na tela de atendimentos
+  // Verifica se está na tela de atendimentos (aceita barra final: /atendimentos/)
   const isAtendimentosPage =
-    location.pathname === "/atendimentos";
+    location.pathname.replace(/\/+$/, "") === "/atendimentos";
 
   // Seções disponíveis para o InteractionPanel
   const sections = [

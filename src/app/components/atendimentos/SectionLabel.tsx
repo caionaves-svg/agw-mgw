@@ -28,7 +28,7 @@ export function SectionLabel({
           {label}
         </p>
         {count !== undefined && count > 0 && (
-          <span className="inline-flex items-center justify-center h-4 min-w-[18px] px-1 rounded-full bg-brand-primary text-white font-semibold"
+          <span className="inline-flex items-center justify-center h-4 min-w-[18px] px-1 rounded-full bg-primary text-white font-semibold"
             style={{ fontSize: "10px" }}>
             {count > 99 ? "99+" : count}
           </span>

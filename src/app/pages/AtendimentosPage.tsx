@@ -104,6 +104,8 @@ export default function AtendimentosPage() {
     if (!contato.isEmCurso) {
       dataContext.assumirAtendimento(contato.id);
     }
+    // Abriu a conversa: as mensagens foram lidas, o badge não precisa mais alertar
+    dataContext.marcarComoLido(contato.id);
     
     setSelectedContact(contato);
     console.log("Abrir conversa com:", contato.nome);

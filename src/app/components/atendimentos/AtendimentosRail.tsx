@@ -4,6 +4,7 @@ import ChannelAvatar from "../ChannelAvatar";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { Usuario, useData } from "../../contexts/DataContext";
+import { ScrollArea } from "../ui/scroll-area";
 
 /** Largura da lista de atendimentos recolhida */
 export const RAIL_WIDTH = 64;
@@ -97,7 +98,8 @@ export function AtendimentosRail({
       </div>
 
       {/* Atendimentos */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-2">
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="pb-2">
         {sections
           .filter((s) => s.contacts.length > 0)
           .map((section) => (
@@ -125,7 +127,7 @@ export function AtendimentosRail({
                       <button
                         type="button"
                         onClick={() => onContactClick(contato)}
-                        aria-label={`${contato.nome} · ${contato.id}`}
+                        aria-label={`${contato.nome} · ${contato.id}${naoLidas > 0 ? ` · ${naoLidas} não lidas` : ""}`}
                         aria-current={isSelected || undefined}
                         className={`relative mx-auto my-1 flex size-12 items-center justify-center rounded-xl transition-colors ${
                           isSelected ? "bg-muted" : "hover:bg-accent"
@@ -133,9 +135,8 @@ export function AtendimentosRail({
                       >
                         <ChannelAvatar nome={contato.nome} channel={contato.channel} size="md" />
                         {naoLidas > 0 && (
-                          <span className="absolute -top-0.5 -right-0.5 bg-destructive text-destructive-foreground text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1.5 ring-2 ring-background">
-                            {naoLidas > 9 ? "9+" : naoLidas}
-                          </span>
+                          // Recolhido: só o indicador; a contagem fica no tooltip
+                          <span className="absolute top-1.5 right-1.5 size-2.5 rounded-full bg-destructive ring-2 ring-background" />
                         )}
                         {pinnedIds.has(contato.id) && (
                           <Pin className="absolute top-0.5 left-0.5 w-3 h-3 text-muted-foreground fill-muted-foreground" />
@@ -146,6 +147,11 @@ export function AtendimentosRail({
                       <p className="text-xs font-medium">
                         {contato.nome} <span className="font-normal opacity-70">· {contato.id}</span>
                       </p>
+                      {naoLidas > 0 && (
+                        <p className="text-xs mt-0.5 font-medium">
+                          {naoLidas} {naoLidas === 1 ? "mensagem não lida" : "mensagens não lidas"}
+                        </p>
+                      )}
                       <p className="text-xs mt-0.5 opacity-80 line-clamp-2">
                         {getUltimaMensagemByUsuarioId(contato.id)}
                       </p>
@@ -155,7 +161,8 @@ export function AtendimentosRail({
               })}
             </div>
           ))}
-      </div>
+        </div>
+      </ScrollArea>
     </div>
   );
 }

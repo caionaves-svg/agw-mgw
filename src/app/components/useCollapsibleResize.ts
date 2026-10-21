@@ -1,12 +1,15 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 
 /**
- * Redimensionamento da lista com "arrastar para recolher":
+ * Redimensionamento de painel lateral com "arrastar para recolher":
  * - entre min e max, a largura acompanha o cursor;
  * - abaixo do mínimo (ou acima do máximo) há resistência elástica;
  * - passou do limiar, a intenção fica armada e só é aplicada ao soltar —
  *   antes disso, nada muda de estado e o usuário pode desistir voltando.
- * O mesmo vale no sentido inverso: arrastar a lista recolhida para expandir.
+ * O mesmo vale no sentido inverso: arrastar o painel recolhido para expandir.
+ *
+ * `edge` é a borda onde fica a alça: "right" para painéis à esquerda da tela
+ * (arrastar para a direita alarga) e "left" para painéis à direita.
  */
 
 /** Distância arrastada além do limite para armar recolher/expandir */
@@ -19,30 +22,37 @@ const rubber = (distance: number, limit: number) =>
 export type DragIntent = "collapse" | "expand" | null;
 
 interface Options {
+  edge: "left" | "right";
   width: number;
   collapsed: boolean;
   min: number;
   max: number;
-  railWidth: number;
+  collapsedWidth: number;
   defaultWidth: number;
+  /** Nome do painel para leitores de tela (ex.: "lista de atendimentos") */
+  label: string;
   onWidthChange: (width: number) => void;
   onCollapsedChange: (collapsed: boolean) => void;
 }
 
-export function useSidebarResize({
+export function useCollapsibleResize({
+  edge,
   width,
   collapsed,
   min,
   max,
-  railWidth,
+  collapsedWidth,
   defaultWidth,
+  label,
   onWidthChange,
   onCollapsedChange,
 }: Options) {
   const start = useRef<{ x: number; width: number } | null>(null);
   const [drag, setDrag] = useState<{ raw: number } | null>(null);
 
-  const restingWidth = collapsed ? railWidth : width;
+  // Arrastar "para fora" do painel alarga: direita na borda direita, esquerda na esquerda
+  const dir = edge === "right" ? 1 : -1;
+  const restingWidth = collapsed ? collapsedWidth : width;
 
   // Largura exibida durante o arraste + intenção armada
   let displayWidth = restingWidth;
@@ -52,8 +62,8 @@ export function useSidebarResize({
   if (drag) {
     const { raw } = drag;
     if (collapsed) {
-      const pulled = Math.max(0, raw - railWidth);
-      displayWidth = railWidth + rubber(pulled, 160);
+      const pulled = Math.max(0, raw - collapsedWidth);
+      displayWidth = collapsedWidth + rubber(pulled, 160);
       progress = Math.min(pulled / ARM_DISTANCE, 1);
       if (pulled >= ARM_DISTANCE) intent = "expand";
     } else if (raw < min) {
@@ -82,12 +92,10 @@ export function useSidebarResize({
   const handleProps = {
     role: "separator",
     "aria-orientation": "vertical" as const,
-    "aria-label": collapsed
-      ? "Arraste para expandir a lista de atendimentos"
-      : "Redimensionar lista de atendimentos",
+    "aria-label": collapsed ? `Arraste para expandir ${label}` : `Redimensionar ${label}`,
     "aria-valuenow": Math.round(restingWidth),
-    "aria-valuemin": collapsed ? railWidth : min,
-    "aria-valuemax": collapsed ? railWidth : max,
+    "aria-valuemin": collapsed ? collapsedWidth : min,
+    "aria-valuemax": collapsed ? collapsedWidth : max,
     tabIndex: 0,
     onPointerDown: (e: PointerEvent<HTMLElement>) => {
       if (e.button !== 0) return;
@@ -100,22 +108,20 @@ export function useSidebarResize({
     },
     onPointerMove: (e: PointerEvent<HTMLElement>) => {
       if (!start.current) return;
-      setDrag({ raw: start.current.width + e.clientX - start.current.x });
+      setDrag({ raw: start.current.width + dir * (e.clientX - start.current.x) });
     },
     onPointerUp: end,
     onPointerCancel: end,
     onDoubleClick: () => (collapsed ? onCollapsedChange(false) : onWidthChange(defaultWidth)),
     onKeyDown: (e: KeyboardEvent<HTMLElement>) => {
-      const step = e.shiftKey ? 64 : 16;
+      const step = (e.shiftKey ? 64 : 16) * dir;
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         onCollapsedChange(!collapsed);
-      } else if (!collapsed && e.key === "ArrowLeft") {
+      } else if (!collapsed && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
         e.preventDefault();
-        onWidthChange(Math.max(width - step, min));
-      } else if (!collapsed && e.key === "ArrowRight") {
-        e.preventDefault();
-        onWidthChange(Math.min(width + step, max));
+        const next = width + (e.key === "ArrowRight" ? step : -step);
+        onWidthChange(Math.min(Math.max(next, min), max));
       }
     },
   };

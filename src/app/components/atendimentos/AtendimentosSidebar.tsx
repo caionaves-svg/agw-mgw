@@ -3,11 +3,12 @@ import { AtendimentosHeader } from "./AtendimentosHeader";
 import { SectionLabel } from "./SectionLabel";
 import { Usuario, useData } from "../../contexts/DataContext";
 import { useState, useMemo, useEffect } from "react";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { FilterPanel, FilterValues } from "./FilterPanel";
 import { NewAtendimentoPanel } from "./NewAtendimentoPanel";
 import { AtendimentosRail, RAIL_WIDTH } from "./AtendimentosRail";
-import { useSidebarResize } from "./useSidebarResize";
+import { useCollapsibleResize } from "../useCollapsibleResize";
+import { CollapsibleResizeEdge } from "../CollapsibleResizeEdge";
+import { ScrollArea } from "../ui/scroll-area";
 
 // Largura da lista expandida (redimensionável pela borda direita)
 const DEFAULT_WIDTH = 392;
@@ -117,12 +118,14 @@ export function AtendimentosSidebar({
   const setCollapsed = (value: boolean) => setLayout((l) => ({ ...l, collapsed: value }));
 
   // Arrastar a borda: redimensiona; abaixo do mínimo, recolhe ao soltar
-  const { displayWidth, isDragging, intent, progress, handleProps } = useSidebarResize({
+  const { displayWidth, isDragging, intent, progress, handleProps } = useCollapsibleResize({
+    edge: "right",
+    label: "a lista de atendimentos",
     width,
     collapsed,
     min: MIN_WIDTH,
     max: MAX_WIDTH,
-    railWidth: RAIL_WIDTH,
+    collapsedWidth: RAIL_WIDTH,
     defaultWidth: DEFAULT_WIDTH,
     onWidthChange: (w) => setLayout((l) => ({ ...l, width: w })),
     onCollapsedChange: setCollapsed,
@@ -290,7 +293,7 @@ export function AtendimentosSidebar({
                         : "translate-x-0"
                   }`}
                 >
-                  <div className="h-full overflow-y-auto overflow-x-hidden custom-scrollbar">
+                  <ScrollArea className="h-full">
                     {/* Seção: Em Atendimento Agora */}
                     {emAtendimentoSorted.length > 0 && (
                       <>
@@ -345,7 +348,7 @@ export function AtendimentosSidebar({
                           ))}
                       </>
                     )}
-                  </div>
+                  </ScrollArea>
                 </div>
 
                 {/* Painel de filtros */}
@@ -390,45 +393,13 @@ export function AtendimentosSidebar({
         </div>
       </div>
 
-      {/* Dica ao armar: só acontece quando o usuário soltar */}
-      <div
-        aria-hidden={!intent}
-        className={`pointer-events-none absolute inset-0 flex items-center justify-center transition-all duration-200 ${
-          intent ? "opacity-100 scale-100" : "opacity-0 scale-95"
-        }`}
-      >
-        {intent === "collapse" ? (
-          <div className="flex items-center gap-2 rounded-full bg-popover border border-border px-3 py-2 text-sm font-medium text-foreground shadow-lg">
-            <PanelLeftClose className="w-4 h-4 text-primary" />
-            Solte para recolher
-          </div>
-        ) : (
-          <div className="flex size-10 items-center justify-center rounded-full bg-popover border border-border shadow-lg">
-            <PanelLeftOpen className="w-4 h-4 text-primary" />
-          </div>
-        )}
-      </div>
-
-      {/* Alça de arraste (borda direita) */}
-      <div
-        {...handleProps}
-        title={
-          collapsed
-            ? "Arraste para expandir · duplo clique para expandir"
-            : "Arraste para redimensionar ou recolher · duplo clique para restaurar"
-        }
-        className="group/handle absolute inset-y-0 -right-1.5 z-10 w-3 cursor-col-resize outline-none"
-      >
-        <span
-          className={`absolute inset-y-0 left-1/2 -translate-x-1/2 transition-all duration-150 ${
-            intent
-              ? "w-0.5 bg-primary"
-              : isDragging
-                ? "w-0.5 bg-primary/60"
-                : "w-px bg-transparent group-hover/handle:w-0.5 group-hover/handle:bg-primary/40 group-focus-visible/handle:w-0.5 group-focus-visible/handle:bg-primary/60"
-          }`}
-        />
-      </div>
+      <CollapsibleResizeEdge
+        edge="right"
+        collapsed={collapsed}
+        intent={intent}
+        isDragging={isDragging}
+        handleProps={handleProps}
+      />
     </div>
   );
 }

@@ -138,6 +138,8 @@ interface DataContextType {
   getEmailById: (id: string) => Email | undefined; // Nova função
   markEmailAsRead: (id: string) => void; // Nova função
   assumirAtendimento: (usuarioId: string) => void; // Nova função para assumir atendimento
+  /** Zera as não lidas ao abrir a conversa (só em memória — volta ao recarregar) */
+  marcarComoLido: (usuarioId: string) => void;
 }
 
 // Context
@@ -1348,6 +1350,14 @@ export function DataProvider({ children }: DataProviderProps) {
     );
   };
 
+  const marcarComoLido = (usuarioId: string) => {
+    setUsuarios((prev) =>
+      prev.map((u) =>
+        u.id === usuarioId ? { ...u, notificacoes: 0, status: "lida" } : u,
+      ),
+    );
+  };
+
   const value: DataContextType = {
     usuarios,
     conversas,
@@ -1362,6 +1372,7 @@ export function DataProvider({ children }: DataProviderProps) {
     getEmailById,
     markEmailAsRead,
     assumirAtendimento,
+    marcarComoLido,
   };
 
   return (

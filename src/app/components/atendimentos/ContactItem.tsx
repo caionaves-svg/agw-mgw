@@ -240,9 +240,9 @@ export function ContactItem({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            {contato.notificacoes && (
+            {(contato.notificacoes ?? 0) > 0 && (
               <div className="bg-destructive text-destructive-foreground text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1.5">
-                {contato.notificacoes > 9
+                {contato.notificacoes! > 9
                   ? "9+"
                   : contato.notificacoes}
               </div>

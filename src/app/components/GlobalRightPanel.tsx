@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Resizable } from "re-resizable";
+import { useEffect, useRef, useState } from "react";
+import { useCollapsibleResize } from "./useCollapsibleResize";
+import { CollapsibleResizeEdge } from "./CollapsibleResizeEdge";
 import { useLocation } from "react-router";
 import {
   useSidePanel,
@@ -29,6 +30,22 @@ import {
   BarChart2,
 } from "lucide-react";
 
+// Largura do painel aberto (redimensionável pela borda esquerda)
+const COLLAPSED_WIDTH = 56;
+const DEFAULT_WIDTH = 464;
+const MIN_WIDTH = 420;
+const MAX_WIDTH = 800;
+const STORAGE_KEY = "cv:painel-direito-largura";
+
+function loadWidth() {
+  try {
+    const w = Number(localStorage.getItem(STORAGE_KEY));
+    return w >= MIN_WIDTH && w <= MAX_WIDTH ? w : DEFAULT_WIDTH;
+  } catch {
+    return DEFAULT_WIDTH;
+  }
+}
+
 export default function GlobalRightPanel() {
   const {
     isOpen,
@@ -36,10 +53,25 @@ export default function GlobalRightPanel() {
     actionSection,
     selectedAtendimento,
     togglePanel,
+    openPanel,
     closePanel,
     isDualMode,
   } = useSidePanel();
-  const [customWidth, setCustomWidth] = useState(464);
+  const [customWidth, setCustomWidth] = useState(loadWidth);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, String(customWidth));
+    } catch {
+      // Sem storage disponível: a largura vale só para esta sessão
+    }
+  }, [customWidth]);
+
+  // Última seção aberta — é ela que volta ao expandir arrastando a borda
+  const lastSectionRef = useRef<SidePanelContentType>("info");
+  useEffect(() => {
+    if (isOpen && contentType) lastSectionRef.current = contentType;
+  }, [isOpen, contentType]);
   const location = useLocation();
 
   // Verifica se está na tela de atendimentos (aceita barra final: /atendimentos/)
@@ -58,6 +90,21 @@ export default function GlobalRightPanel() {
 
   // Define se o painel está colapsado (apenas barra de ícones visível)
   const isCollapsed = !isOpen;
+
+  // Arrastar a borda: redimensiona; abaixo do mínimo, fecha ao soltar
+  const { displayWidth, isDragging, intent, progress, handleProps } = useCollapsibleResize({
+    edge: "left",
+    label: "o painel lateral",
+    width: customWidth,
+    collapsed: isCollapsed,
+    min: MIN_WIDTH,
+    max: MAX_WIDTH,
+    collapsedWidth: COLLAPSED_WIDTH,
+    defaultWidth: DEFAULT_WIDTH,
+    onWidthChange: setCustomWidth,
+    onCollapsedChange: (collapse) =>
+      collapse ? closePanel() : openPanel(lastSectionRef.current, selectedAtendimento),
+  });
 
   // Só renderiza na página de atendimentos
   if (!isAtendimentosPage) return null;
@@ -137,88 +184,78 @@ export default function GlobalRightPanel() {
   };
 
   return (
-    <Resizable
-      size={{
-        width: isCollapsed ? 56 : customWidth,
-        height: "100%",
-      }}
-      minWidth={isCollapsed ? 56 : 420}
-      maxWidth={isCollapsed ? 56 : 800}
-      enable={{
-        left: !isCollapsed,
-        top: false,
-        right: false,
-        bottom: false,
-        topRight: false,
-        bottomRight: false,
-        bottomLeft: false,
-        topLeft: false,
-      }}
-      onResizeStop={(e, direction, ref, d) => {
-        if (!isCollapsed) {
-          setCustomWidth(customWidth + d.width);
-        }
-      }}
-      handleStyles={{
-        left: {
-          width: "4px",
-          left: "0",
-          cursor: "col-resize",
-          backgroundColor: "transparent",
-          transition: "background-color 0.2s",
-        },
-      }}
-      handleClasses={{
-        left: "hover:bg-brand-primary/20",
-      }}
-      className="transition-all duration-300 flex-shrink-0"
+    <div
+      style={{ width: displayWidth }}
+      className={`relative h-full flex-shrink-0 ${
+        isDragging
+          ? ""
+          : "transition-[width] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
+      }`}
     >
-      <div className="bg-muted border-l border-border h-full flex flex-col w-full">
-        {/* Conteúdo principal */}
-        <div className="flex-1 flex overflow-hidden gap-0 p-0">
-          {/* Barra de ícones à esquerda - só aparece na página de atendimentos */}
-          {isAtendimentosPage && selectedAtendimento && (
-            <div className="w-14 flex-shrink-0">
-              <InteractionSidebarButtons
-                sections={sections}
-                activeSection={contentType}
-                actionSection={actionSection}
-                onToggleSection={(sectionId) =>
-                  togglePanel(
-                    sectionId as any,
-                    selectedAtendimento,
-                  )
-                }
-              />
-            </div>
-          )}
+      {/* Conteúdo: largura própria para ser "coberto" (e não espremido) ao arrastar */}
+      <div
+        className="h-full overflow-hidden transition-opacity duration-150"
+        style={{ opacity: intent ? 0.35 : 1 - progress * 0.4 }}
+      >
+        <div
+          className="bg-muted border-l border-border h-full flex flex-col"
+          style={{ width: isCollapsed ? COLLAPSED_WIDTH : Math.max(displayWidth, MIN_WIDTH) }}
+        >
+          {/* Conteúdo principal */}
+          <div className="flex-1 flex overflow-hidden gap-0 p-0">
+            {/* Barra de ícones à esquerda - só aparece na página de atendimentos */}
+            {isAtendimentosPage && selectedAtendimento && (
+              <div className="w-14 flex-shrink-0">
+                <InteractionSidebarButtons
+                  sections={sections}
+                  activeSection={contentType}
+                  actionSection={actionSection}
+                  onToggleSection={(sectionId) =>
+                    togglePanel(
+                      sectionId as any,
+                      selectedAtendimento,
+                    )
+                  }
+                />
+              </div>
+            )}
 
-          {/* Painel de conteúdo - só aparece quando expandido */}
-          {!isCollapsed && (
-            <div className="flex-1 overflow-hidden flex flex-col">
-              {isDualMode ? (
-                // Modo Dual: Info em cima + Ações em baixo
-                <>
-                  {/* Seção informativa (55% da altura) */}
-                  <div className="flex-[55] overflow-hidden pr-2 pt-2 pb-2">
+            {/* Painel de conteúdo - só aparece quando expandido */}
+            {!isCollapsed && (
+              <div className="flex-1 overflow-hidden flex flex-col">
+                {isDualMode ? (
+                  // Modo Dual: Info em cima + Ações em baixo
+                  <>
+                    {/* Seção informativa (55% da altura) */}
+                    <div className="flex-[55] overflow-hidden pr-2 pt-2 pb-2">
+                      {renderSectionContent(contentType)}
+                    </div>
+
+                    {/* Seção de ações (45% da altura) */}
+                    <div className="flex-[45] overflow-hidden pr-2 pb-2">
+                      {renderSectionContent(actionSection)}
+                    </div>
+                  </>
+                ) : (
+                  // Modo Single: Uma seção ocupa 100%
+                  <div className="flex-1 overflow-hidden pr-2 py-2">
                     {renderSectionContent(contentType)}
                   </div>
-
-                  {/* Seção de ações (45% da altura) */}
-                  <div className="flex-[45] overflow-hidden pr-2 pb-2">
-                    {renderSectionContent(actionSection)}
-                  </div>
-                </>
-              ) : (
-                // Modo Single: Uma seção ocupa 100%
-                <div className="flex-1 overflow-hidden pr-2 py-2">
-                  {renderSectionContent(contentType)}
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </Resizable>
+
+      <CollapsibleResizeEdge
+        edge="left"
+        collapsed={isCollapsed}
+        intent={intent}
+        isDragging={isDragging}
+        handleProps={handleProps}
+        collapseLabel="Solte para fechar"
+      />
+    </div>
   );
 }
